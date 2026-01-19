@@ -370,7 +370,7 @@ grep <span class="hljs-string">&quot;pattern&quot;</span> filename | <span class
 <ol start="3">
 <li><strong>Creating IDs by combining existing values</strong>, printing formatted strings: <code>awk</code> supports the use of <code>printf</code> and concatenate its output, which can be used to create ID columns.</li>
 </ol>
-<pre><code class="language-bash">awk <span class="hljs-string">&#x27;{print $1, $2, $3, &quot;loop_&quot; NR}&#x27;</span> exampleLoop.bedpe &gt; exammpleLoop_wID.bedpe
+<pre><code class="language-bash">awk <span class="hljs-string">&#x27;{print $1, $2, $3, $4, $5, $6, &quot;loop_&quot; NR}&#x27;</span> exampleLoop.bedpe &gt; exammpleLoop_wID.bedpe
 </code></pre>
 <ol start="4">
 <li><strong>Math and creating summary statistics</strong>: This involves using <code>BEGIN</code> and <code>END</code> blocks, which are only processed <a href="https://www.gnu.org/software/gawk/manual/html_node/Using-BEGIN_002fEND.html">once</a>. For example, the following will calculate the mean using non-zero values in column 2 and store it to a variable called <code>mean_no_zero</code>.</li>
@@ -518,8 +518,8 @@ step1=<span class="hljs-string">&quot;<span class="hljs-variable">${filename2##*
 <strong>Example:</strong> Across databases, gene symbols might have different formats. For example, some will make all characters uppercase (for proteins) whereas others only make the first letter uppercase (for genes). You can use the following to make all but first character in lowercase.</li>
 </ol>
 <pre><code class="language-bash">inarray=(<span class="hljs-string">&quot;egfr&quot;</span> <span class="hljs-string">&quot;Myc&quot;</span> <span class="hljs-string">&quot;BRCA1&quot;</span>)
-inarray_all_lower=( <span class="hljs-string">&quot;<span class="hljs-variable">${inarray[@]}</span>,,&quot;</span> )
-inarray_first_up=( <span class="hljs-string">&quot;<span class="hljs-variable">${inarray_all_lower[@]}</span>^&quot;</span> )
+inarray_all_lower=( <span class="hljs-string">&quot;<span class="hljs-variable">${inarray[@],,}</span>&quot;</span> )
+inarray_first_up=( <span class="hljs-string">&quot;<span class="hljs-variable">${inarray_all_lower[@]^}</span>&quot;</span> )
 </code></pre>
 <ol start="3">
 <li><strong>Replacing parts of the variable using <code>/</code> and <code>//</code></strong>: This is helpful for replacing parts of the variable in a quick and efficient ways. Using the format <code>${variable/feature/replacement}</code> only replaces once, whereas <code>${variable//feature/replacement}</code> will replace all matches.

@@ -230,7 +230,7 @@ awk -v mychrom="chr1" '$1 == mychrom' example.bed > example_chr1.bed
    
 3. **Creating IDs by combining existing values**, printing formatted strings: `awk` supports the use of `printf` and concatenate its output, which can be used to create ID columns.
 ```bash
-awk '{print $1, $2, $3, "loop_" NR}' exampleLoop.bedpe > exammpleLoop_wID.bedpe
+awk '{print $1, $2, $3, $4, $5, $6, "loop_" NR}' exampleLoop.bedpe > exammpleLoop_wID.bedpe
 ``` 
    
 4. **Math and creating summary statistics**: This involves using `BEGIN` and `END` blocks, which are only processed [once](https://www.gnu.org/software/gawk/manual/html_node/Using-BEGIN_002fEND.html). For example, the following will calculate the mean using non-zero values in column 2 and store it to a variable called `mean_no_zero`.
@@ -406,8 +406,8 @@ step1="${filename2##*/}"; fileID2="${step1%%_*}"
 
 ```bash
 inarray=("egfr" "Myc" "BRCA1")
-inarray_all_lower=( "${inarray[@]},," )
-inarray_first_up=( "${inarray_all_lower[@]}^" )
+inarray_all_lower=( "${inarray[@],,}" )
+inarray_first_up=( "${inarray_all_lower[@]^}" )
 ```
 
 3. **Replacing parts of the variable using `/` and `//`**: This is helpful for replacing parts of the variable in a quick and efficient ways. Using the format `${variable/feature/replacement}` only replaces once, whereas `${variable//feature/replacement}` will replace all matches.
