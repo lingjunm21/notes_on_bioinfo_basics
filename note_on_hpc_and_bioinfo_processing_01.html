@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Bash</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<link href="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.css" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <!-- title: Bash -->
+<p><strong>Notes on HPC and bioinformatics</strong></p>
+<p>These are a series of notes that I made after completing my thesis project. I wish to record the packages and some of the scripts that I frequently used throughout the project. Please note that the information may not be 100% correct so please use the code with caution.</p>
+<p>Also for myself: <a href="https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md">which types of languages get highlighted by md</a>?</p>
+<h1 id="section-1-bash">Section 1: Bash</h1>
+<p><strong>Table of Contents</strong></p>
+<ul>
+<li><a href="#section-1-bash">Section 1: Bash</a>
+<ul>
+<li><a href="#11-using-bash--linux-in-windows">1.1 Using bash / linux in Windows</a></li>
+<li><a href="#12-basic-bash-commands">1.2 Basic bash commands</a>
+<ul>
+<li><a href="#1-navigating-around-the-system--cd-pwd-ls-ll-du">1. <em>Navigating around the system | <code>cd</code>, <code>pwd</code>, <code>ls</code>, <code>ll</code>, <code>du</code></em></a></li>
+<li><a href="#2-printing-something-out--echo-cat">2. <em>Printing something out | <code>echo</code>, <code>cat</code></em></a></li>
+<li><a href="#3-creating-and-reading-a-file--touch--nano-cp-mv-head-tail-cat-less-read-readarray">3. <em>Creating and reading a file | <code>touch</code>, <code>&gt;</code>, <code>nano</code>, <code>cp</code>, <code>mv</code>, <code>head</code>, <code>tail</code>, <code>cat</code>, <code>less</code>, <code>read</code>, <code>readarray</code></em></a></li>
+</ul>
+</li>
+<li><a href="#13-slightly-advanced-bash-commands">1.3 (Slightly) Advanced bash commands</a>
+<ul>
+<li><a href="#1-changing-file-contents-searching-etc--wc-cut-sed-sort-grep">1. <em>Changing file contents, searching, etc. | <code>wc</code>, <code>cut</code>, <code>sed</code>, <code>sort</code>, <code>grep</code></em></a></li>
+<li><a href="#2-performing-complex--row-wise-behaviours--awk">2. <em>Performing complex  row-wise behaviours | <code>awk</code></em></a></li>
+<li><a href="#3-transferring-files-between-local-cluster-or-cloud--rsync-rclone">3. <em>Transferring files between local, cluster or cloud | <code>rsync</code>, <code>rclone</code></em></a></li>
+<li><a href="#4-creating-and-removing-temporary-files--mktemp-trap">4. <em>Creating and removing temporary files | <code>mktemp</code>, <code>trap</code></em></a></li>
+</ul>
+</li>
+<li><a href="#14-other-useful-features-in-bash">1.4 Other useful features in Bash</a>
+<ul>
+<li><a href="#1-parameter-expansion">1. Parameter expansion</a></li>
+<li><a href="#2-process-substitutions--and-command-substitutions-">2. Process substitutions <code>&lt;()</code> and command substitutions <code>$()</code></a></li>
+</ul>
+</li>
+<li><a href="#15-brief-notes-on-hpc">1.5 Brief notes on HPC</a></li>
+<li><a href="#16-using-conda">1.6 Using conda</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="11-using-bash--linux-in-windows">1.1 Using bash / linux in Windows</h2>
+<p>Unlike Mac users, Windows users need to manually install Linux system.</p>
+<p><strong>1. Installing ubuntu</strong><br>
+For a windows system, first install the <code>WSL</code> (windows subsystem for linux) or <code>ubuntu</code> following this <a href="https://learn.microsoft.com/en-us/windows/wsl/install">link for WSL</a> and this <a href="https://ubuntu.com/desktop/wsl">link for ubuntu</a>. Then you can access the operating system by typing <code>ubuntu</code> in the search bar.</p>
+<p>If the installation is successful, you can access in two ways:</p>
+<ol>
+<li>Go to command prompt, and type: <code>wsl</code></li>
+<li>Search &quot;ubuntu&quot; and open the ubuntu terminal</li>
+</ol>
+<p><strong>2. I want to access files in an external hard drive</strong><br>
+Sometimes you want to access data in an external hard drive, which cannot be recognised unless being &quot;mounted&quot;. This is an example script I use to mount a drive <code>D:</code> and avoid the permission issues:</p>
+<pre><code class="language-bash">sudo mount -t drvfs D: /mnt/d -o uid=1000,gid=1000
+</code></pre>
+<p>(I cannot remember where I copied this - apologies). You can check if the drive is mounted or not by going to the <code>/mnt</code> directory using <code>cd</code> command. If successful the drive should be accessible and you can view all files using <code>ls</code>.</p>
+<p>To remove the drive after you finish, use:</p>
+<pre><code class="language-bash">sudo umount /mnt/d
+</code></pre>
+<p><strong>3. I forget my linux password</strong><br>
+Using <code>sudo</code> commands requires a password. If you have forgotten the password, it is possible to reset it following these instructions, based on the discussion <a href="https://askubuntu.com/questions/931940/unable-to-change-the-root-password-in-windows-10-wsl">here</a>.</p>
+<ol>
+<li>Open the windows terminal, <code>cmd.exe</code></li>
+<li>In the terminal, type the following, line by line:</li>
+</ol>
+<pre><code class="language-cmd">wsl -u root
+passwd username 
+:: Now you shall be prompted to change your password
+<span class="hljs-keyword">exit</span>
+</code></pre>
+<p>Username is the string coming before <code>@computer</code> when you use <code>ubuntu</code>. The password should be changed after these steps.</p>
+<h2 id="12-basic-bash-commands">1.2 Basic bash commands</h2>
+<p>There are a lot of useful commands in Bash. I am only familiar with very few of them. I have categorised them according to my subjective rating for their &quot;usefulness&quot;. If you want to receive help on a command, in bash you can type its name and: <code>--h</code> or <code>-h</code>.</p>
+<p>These are the most basic commands for viewing, navigating, and creating files. Most of them are simple to use, and all of them are frequently used in data processing.</p>
+<hr>
+<h3 id="1-navigating-around-the-system--cd-pwd-ls-ll-du">1. <em>Navigating around the system | <code>cd</code>, <code>pwd</code>, <code>ls</code>, <code>ll</code>, <code>du</code></em></h3>
+<ol>
+<li>
+<p><code>cd directory</code> and <code>pwd</code>: <code>cd</code> will let you go to a specified location, whereas <code>pwd</code> prints the current directory.</p>
+</li>
+<li>
+<p><code>ls location</code> and <code>ll location</code>: shows the names and information of files listed in a named directory. They can also be combined with <em>globbing characters</em> to specifically look for files with certain pattern.</p>
+</li>
+</ol>
+<pre><code class="language-bash"><span class="hljs-built_in">ls</span> myprotein_[abc].pdf
+</code></pre>
+<blockquote>
+<p>More on <strong>globbing characters / glob</strong>: These are useful in matching <strong>filenames</strong> in Linux, i.e. they helps to match filenames containing certain patterns. Many useful links explain them, like this <a href="https://www.scaler.com/topics/glob-linux/">one</a>.</p>
+<p>Some commonly used are:</p>
+<ul>
+<li><code>*</code> for 0+ characters</li>
+<li><code>?</code> for exactly one characters</li>
+<li><code>[123abc]</code> match any one character from bracket</li>
+<li><code>[1-3]</code> match anything in the range</li>
+<li><code>^!</code> excludes characters</li>
+</ul>
+<p>Note that glob can be used with many commands that requires a filename. When used, they cannot be quoted. Finally, glob is different from <strong>regular expression</strong>.</p>
+</blockquote>
+<ol start="3">
+<li><code>du location</code>: Less about navigating, this commands prints the size of files in specified directory. Use <code>du -h</code> so results are human-readable.</li>
+</ol>
+<hr>
+<h3 id="2-printing-something-out--echo-cat">2. <em>Printing something out | <code>echo</code>, <code>cat</code></em></h3>
+<ol>
+<li>
+<p><code>echo something</code>: print something, useful when providing a message like current file being processed.</p>
+</li>
+<li>
+<p><code>cat filename</code>: it requires <em>files</em> as input and displays the contents. For example, you can use <code>cat file1 file2</code> to combine multiple files, or use <code>cat -A file</code> to show the non-printing characters.<br>
+<code>-A</code> flag is particularly useful to check: <strong>1)</strong> if a tab separated file (tsv) is correctly separated, with <code>^I</code> between columns; <strong>2)</strong> if there are any <em>carriage return</em> <code>\r</code> at the end of each row (which is a feature of file created in Windows). Do this checking when <code>sed</code> or <code>cut</code> do something weird.</p>
+</li>
+</ol>
+<hr>
+<h3 id="3-creating-and-reading-a-file--touch--nano-cp-mv-head-tail-cat-less-read-readarray">3. <em>Creating and reading a file | <code>touch</code>, <code>&gt;</code>, <code>nano</code>, <code>cp</code>, <code>mv</code>, <code>head</code>, <code>tail</code>, <code>cat</code>, <code>less</code>, <code>read</code>, <code>readarray</code></em></h3>
+<p>There are many different ways to create a new file.</p>
+<ol>
+<li>
+<p><code>touch filename</code>: This will create an empty file with the specified name. If the file exists, the modification time will change but content will not be touched.</p>
+</li>
+<li>
+<p><code>&gt; filename</code>: <strong>Output redirection</strong> -- it will create an empty file, or empty an existing file under the name without deleting it. Use it with caution when there are already files under the name!</p>
+</li>
+<li>
+<p><code>nano filename</code>: If file with the specified name has not been created, this can be used generate a new file. The file has to be <strong>manually saved</strong> using <code>ctrl + O</code>, then use <code>ctrl + X</code> to exit. It can be used to edit an existing file. I also find <code>ctrl + K</code> useful: this allows you to quickly cut rows to remove them or paste them elsewhere. <code>alt - U</code> to undo.</p>
+</li>
+<li>
+<p><code>... &gt;&gt; filename</code>: <strong>Append redirection</strong> -- it will append new information to an existing file and is safer to use when you are working on important data. <strong>Do not confuse it with output redirection, which wipes out your content!</strong></p>
+</li>
+<li>
+<p><code>cp filename newfilename</code>, <code>mv filename newfilename</code>: These commands will create a file named <code>newfilename</code> with same information as the original file, <code>filename</code>. As name suggests, <code>cp</code> will retain new file, whereas <code>mv</code> will rename the old file to its new name.</p>
+</li>
+</ol>
+<p>After creating new files, you now can read a file! Depending on <strong>your goals</strong>, you may want to use different ways to read it.</p>
+<ol>
+<li>
+<p>To have a glimpse of the file: Use <code>head filename</code> or <code>tail filename</code>: by default, they will only show 10 rows at the start or end (change using <code>-n num</code>). This is useful to know what information is kept in the file, or checking if a work has successfully completed by inspecting the end of a log.</p>
+</li>
+<li>
+<p>Checking structure of the file: Use <code>cat -A</code> with <code>head</code> / <code>tail</code> to find out if columns are properly separated or there is no trailing <code>\r</code> is important for processing data. If your file is zipped, then use <code>zcat</code>.</p>
+</li>
+</ol>
+<pre><code class="language-bash"><span class="hljs-built_in">cat</span> -A something | <span class="hljs-built_in">head</span>
+</code></pre>
+<p>See previous section on <code>cat</code>.</p>
+<ol start="3">
+<li>
+<p>View / scroll through the file, especially when the file is large: Use <code>less filename</code>. Once inside, you can search for strings using <code>/pattern</code>. I am not very familiar so please read <a href="https://unix.stackexchange.com/questions/31/list-of-useful-less-functions">here</a> for more useful functions. <code>less</code> is extremely powerful! If your file is zipped, then use <code>zless</code>.</p>
+</li>
+<li>
+<p>Read and edit the file: Use <code>nano</code>. This is the text editor we have discussed a while ago.</p>
+</li>
+<li>
+<p>Do something based on file rows: Use <code>while</code> loop + <code>read</code> command (read discussion <a href="https://stackoverflow.com/questions/62668968/how-read-line-in-while-loop-works">here</a>), which stores each row as a <strong>variable</strong>.</p>
+</li>
+</ol>
+<pre><code class="language-bash"><span class="hljs-keyword">while</span> IFS= <span class="hljs-built_in">read</span> -r LINE; <span class="hljs-keyword">do</span> 
+    <span class="hljs-comment"># Do something for each row ($LINE)</span>
+    value=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$LINE</span> | <span class="hljs-built_in">cut</span> -f1)
+<span class="hljs-keyword">done</span> &lt; infile 
+</code></pre>
+<p>Alternatively, use <code>readarray -t</code>, for example:</p>
+<pre><code class="language-bash"><span class="hljs-built_in">readarray</span> -t myarray &lt; infile
+LINE1=<span class="hljs-variable">${myarray[0]}</span> <span class="hljs-comment"># each element is a row</span>
+</code></pre>
+<p>These are useful when the <code>infile</code> contains some metadata, for example, and you want to do something according to different values appearing on each row.
+<code>readarray</code> is more efficient than <code>while + read</code> loop for small files. Sometimes I will create single-column files storing sample ID and read them into a script using <code>readarray</code>. I find it cleaner compared to typing an array inside the script and makes the file more flexible.</p>
+<pre><code class="language-bash"><span class="hljs-comment"># Do this in command line</span>
+suffix=<span class="hljs-string">&quot;_original.bed&quot;</span>
+<span class="hljs-built_in">ls</span> *<span class="hljs-variable">${suffix}</span> | sed <span class="hljs-string">&quot;s|<span class="hljs-variable">${suffix}</span>$||&quot;</span> &gt; examplearr.txt
+
+<span class="hljs-comment"># Then write these in PBS job</span>
+suffix_in=<span class="hljs-string">&quot;_original.bed&quot;</span>
+suffix_out=<span class="hljs-string">&quot;_modified.bed&quot;</span>
+filelist=<span class="hljs-string">&quot;examplearr.txt&quot;</span>
+
+<span class="hljs-built_in">readarray</span> -t myarray &lt; <span class="hljs-variable">$filelist</span>
+fileproc=<span class="hljs-variable">${myarray[$PBS_ARRAY_INDEX]}</span>
+
+infile=<span class="hljs-string">&quot;<span class="hljs-variable">${fileproc}</span><span class="hljs-variable">${suffix_in}</span>&quot;</span>
+outfile=<span class="hljs-string">&quot;<span class="hljs-variable">${fileproc}</span><span class="hljs-variable">${suffix_out}</span>&quot;</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;Currently processing: <span class="hljs-variable">${fileproc}</span>&quot;</span>
+</code></pre>
+<hr>
+<h2 id="13-slightly-advanced-bash-commands">1.3 (Slightly) Advanced bash commands</h2>
+<h3 id="1-changing-file-contents-searching-etc--wc-cut-sed-sort-grep">1. <em>Changing file contents, searching, etc. | <code>wc</code>, <code>cut</code>, <code>sed</code>, <code>sort</code>, <code>grep</code></em></h3>
+<p>These commands will do something to files. Here is only a basic introduction so I will attach links from w3schools which is far more informative than mine, but I will try to include how commands might be useful.</p>
+<ol>
+<li><code>wc filename</code>: This returns the length of the file, in terms of the character, word, and row count. As this command has a habbit of printing filename with its output, you can mute this behaviour as follows:</li>
+</ol>
+<pre><code class="language-bash"><span class="hljs-comment">### Muting filename from wc</span>
+<span class="hljs-comment"># file as stdin</span>
+<span class="hljs-built_in">wc</span> -l &lt; filename
+
+<span class="hljs-comment"># piping input from other commands.</span>
+grep <span class="hljs-string">&quot;pattern&quot;</span> filename | <span class="hljs-built_in">wc</span> -l
+</code></pre>
+<p><strong>Example:</strong> I sometimes use this command to roughly understand the scale of your outputs, such as using <code>wc -l &lt; filename</code> on <code>bed</code> files to study the number of peaks from Chip-seq experiment.</p>
+<ol start="2">
+<li>
+<p><code>cut -f1 -d, filename</code>: This allows you to select some columns. First by some delimiter using <code>-d</code>, and retain some columns based on their location (counting from 1) using <code>-f</code>. Such as: <code>cut -d, -f2-4 something.csv</code> for a csv file. You do not need to specify delimiter if tab-separated (see if there is <code>^I</code> between columns). <code>cut</code> is simple and quick to use but it is also functionally simple. If <code>cut</code> is not working or behaving weirdly, use <code>awk</code> instead (see below); additionally, if you wish to reorder columns, use <code>awk</code>.<br>
+<strong>Example:</strong> This is useful if you want to find data from a specified column (i.e. a specific variable), for example if you only want the gene symbol from a gtf file.</p>
+</li>
+<li>
+<p><code>sed &quot;s|pattern1|replacement|behaviour&quot; filename</code>: This is used to replace something with particular pattern, either in place (with flag <code>-i</code>) or redirect to a new file (<code>sed &quot;s|p1|r1|g&quot; filename &gt; newfile</code>; <code>g</code> stands for global and ensures substitution is made for all matched patterns). See more <a href="https://www.w3schools.com/bash/bash_sed.php">here</a>. You can alternatively separate the delimiter using <code>/</code> or <code>:</code> just ensure it is consistent.</p>
+</li>
+<li>
+<p><code>sort</code>: It is often used with the <code>-k</code> flag to sort a file based on specific columns, or use <code>-u</code> to remove duplicated rows. See more <a href="https://www.w3schools.com/bash/bash_sort.php">here</a>.<br>
+<strong>Example:</strong> This command is frequently used with <code>bed</code> or <code>bedpe</code> (genomic coordinates) file, where rows need to be ordered based on their positions in the genome. It functions similarly as <a href="https://bedtools.readthedocs.io/en/latest/content/tools/sort.html"><code>bedtools sort</code></a>. The most often usage is:</p>
+</li>
+</ol>
+<pre><code class="language-bash"><span class="hljs-comment"># Bed: sort based on chr and start coordinate</span>
+<span class="hljs-built_in">sort</span> -k 1,1 2,2n file1.bed &gt; file1_sortByCoord.bed
+<span class="hljs-comment"># Bedpe: sort based on chrs and start coordinates from left, then right feature</span>
+<span class="hljs-built_in">sort</span> -k 1,1 2,2n 4,4 5,5n file2.bedpe &gt; file2_sortByCoord.bedpe
+</code></pre>
+<ol start="5">
+<li><code>grep &quot;pattern&quot; filename</code>: This is used for searching a specific pattern in a file, and is poswerful when using in combination with regular expressions. See more <a href="https://www.w3schools.com/bash/bash_grep.php">here</a>.<br>
+<strong>Example:</strong> For instance, when you want to subset a dataset based on presence of a specific pattern, or selecting rows matching an ID. You can also remove specific rows using <code>-v</code> flag, like <code>grep -v &quot;^#&quot;</code> to remove annotation / header rows in a gtf file.</li>
+</ol>
+<hr>
+<h3 id="2-performing-complex--row-wise-behaviours--awk">2. <em>Performing complex  row-wise behaviours | <code>awk</code></em></h3>
+<p><code>awk</code> should belong to the previous section. However, as this tool is <strong>exteremely useful</strong> during my processing I want to write a bit more. Note that <code>awk</code> has a slightly different grammar than <code>bash</code> and its own functions.</p>
+<p>Some of <code>awk</code>'s functionalities overlaps with the commands we have discussed before. For example, you can select columns using their index in awk: <code>awk -F, '{print $2, $3}'</code> which equals to <code>cut -d, -f2,3</code>. (By the way, <code>$0</code> is the full row). However, <code>awk</code> is more flexible: you can simply change order of columns using <code>'{print $3, $2}'</code> inside the quotes, which is not achieveable in <code>cut</code>!</p>
+<p>In brief, many command line tools are highly specified and efficient. <code>awk</code> is more flexible but is slightly slower than these more devoted tools.You can use <code>awk</code> to achieve the following, but there are many additional applications:</p>
+<ol>
+<li><strong>Changing the file separator</strong>: A brief explanation: after <code>-F</code> you specify the file separator of the input file (the same as <code>'BEGIN{FS = &quot;,&quot;}'</code>). <code>OFS</code> is a variable name reserved for the <strong>o</strong>utput <strong>f</strong>ile <strong>s</strong>eparator.</li>
+</ol>
+<pre><code class="language-bash">awk -F, -v OFS=<span class="hljs-string">&quot;\t&quot;</span> <span class="hljs-string">&quot;{print <span class="hljs-variable">$1</span>,<span class="hljs-variable">$2</span>,<span class="hljs-variable">$3</span>}&quot;</span> ex.csv &gt; ex.tsv 
+</code></pre>
+<ol start="2">
+<li><strong>Filtering rows based on a specific value and column</strong>: For example the following script returns all rows (<code>{print $0}</code> is default behaviour) whose first column equals to the specified variable, <code>mychrom</code> (do not need <code>$</code>, unlike in bash). Conditionals outside the <code>{}</code> are used to filter rows, and operations inside <code>{}</code> will be performed on all rows meeting this filter.</li>
+</ol>
+<pre><code class="language-bash">awk -v mychrom=<span class="hljs-string">&quot;chr1&quot;</span> <span class="hljs-string">&#x27;$1 == mychrom&#x27;</span> example.bed &gt; example_chr1.bed
+</code></pre>
+<ol start="3">
+<li><strong>Creating IDs by combining existing values</strong>, printing formatted strings: <code>awk</code> supports the use of <code>printf</code> and concatenate its output, which can be used to create ID columns.</li>
+</ol>
+<pre><code class="language-bash">awk <span class="hljs-string">&#x27;{print $1, $2, $3, &quot;loop_&quot; NR}&#x27;</span> exampleLoop.bedpe &gt; exammpleLoop_wID.bedpe
+</code></pre>
+<ol start="4">
+<li><strong>Math and creating summary statistics</strong>: This involves using <code>BEGIN</code> and <code>END</code> blocks, which are only processed <a href="https://www.gnu.org/software/gawk/manual/html_node/Using-BEGIN_002fEND.html">once</a>. For example, the following will calculate the mean using non-zero values in column 2 and store it to a variable called <code>mean_no_zero</code>.</li>
+</ol>
+<pre><code class="language-bash">mean_no_zero=$(awk <span class="hljs-string">&#x27;BEGIN {nrow = 0; sum = 0} {if ($2 != 0) {nrow ++; sum += $2}} END {if (nrow &gt; 0) print sum / nrow; else print &quot;0&quot;}&#x27;</span>)
+</code></pre>
+<ol start="5">
+<li><strong>Do something for one file relative to another</strong>: For example, you can use values from the first file to filter the second file. In the following example, column 1 of <code>file1</code> is used as <strong>key</strong> to filter <code>file2</code>. <code>NR</code> records number of all processed record whereas <code>FNR</code> is current record number, so the conditional <code>NR == FNR</code> will only be met for the first file (see <a href="https://stackoverflow.com/questions/32481877/what-are-nr-and-fnr-and-what-does-nr-fnr-imply">here</a> for a discussion!).</li>
+</ol>
+<pre><code class="language-bash"><span class="hljs-comment"># Imagine we have two lists of differentially expressed genes</span>
+<span class="hljs-comment"># We want to keep DEGs in cell2 that are differentially expressed in cell1</span>
+
+awk -F, -v OFS=<span class="hljs-string">&quot;,&quot;</span> <span class="hljs-string">&#x27;NR == FNR {a[$1]; next} $1 in a {print $0}&#x27;</span> cell1_DEG.csv cell2_DEG.csv &gt; cell2_DEG_in_cell1.csv
+</code></pre>
+<ol start="6">
+<li><strong>Take advantage of <code>awk</code> functions to achieve more complicated behaviour</strong>. For example, combining <code>split()</code> and <code>match()</code> functions in <code>awk</code> to obtain data from complex tables in a clear and readable manner. Let's say we want to separate the column 9 in a <a href="https://www.gencodegenes.org/human/">Gencode GTF annotation file</a>. This can be achieved using the following:</li>
+</ol>
+<pre><code class="language-bash"><span class="hljs-comment"># If I want a cleaned bed file of TSS from gencode &quot;genes&quot;</span>
+awk -v OFS=<span class="hljs-string">&quot;\t&quot;</span> <span class="hljs-string">&#x27;
+BEGIN { FS = &quot;\t&quot; }
+{
+    # Check feature is gene
+    if ($3 == &quot;gene&quot;) {
+        chr = $1; raw_start = $4; raw_end = $5; strand = $7;  description = $9; # You can assign column to variables
+
+	# Parse description for ID / type / Symbol
+	split(description, description_split, &quot;; &quot;)
+	match(description_split[1], /&quot;([^&quot;]*)&quot;/, gene_id)
+	match(description_split[2], /&quot;([^&quot;]*)&quot;/, gene_type)
+	match(description_split[3], /&quot;([^&quot;]*)&quot;/, gene_name)
+
+	# Depending on strand, get start and end sites
+	if (strand == &quot;+&quot;) {
+	    start = raw_start - 1
+	    end = raw_start
+	} else if (strand == &quot;-&quot;) {
+	    start = raw_end - 1
+	    end = raw_end
+	}
+
+	# Report all information
+	print chr, start, end, gene_id[1], gene_name[1], gene_type[1]
+    }
+}
+&#x27;</span> <span class="hljs-variable">$gencode_gtf_file</span> &gt; <span class="hljs-variable">$output_file</span>
+</code></pre>
+<p>You can find a list of the functions <a href="https://www.gnu.org/software/gawk/manual/html_node/Built_002din.html">here</a>.</p>
+<p>There are definitely other exciting applications of <code>awk</code> that I missed at present, and I am happy to learn them from you. Overall it is a very flexible and quick command line tool that I really recommend using, whenever you found the intended behaviour is more complicated that basic bash commands but does not require Python / R logic.</p>
+<hr>
+<h3 id="3-transferring-files-between-local-cluster-or-cloud--rsync-rclone">3. <em>Transferring files between local, cluster or cloud | <code>rsync</code>, <code>rclone</code></em></h3>
+<p>These two functions allows you to move files around and access remote data, such as those stored in a Google drive or onedrive.</p>
+<ol>
+<li><code>rsync</code>: This command is useful in copying large file and prevents data loss. It can be used to transfer data within linux or between <strong>cluster</strong> (like HPC):</li>
+</ol>
+<pre><code class="language-bash">rsync -avP username@address.of.hpc:some/remote/location/filename* <span class="hljs-built_in">local</span>/location
+</code></pre>
+<p>This command recursively retrieve all files at <code>some/remote/location</code> and store them at <code>local/location</code>, while tracking progress and providing a progress bar. If you want to access some files ending only in some suffix like <code>.bam</code>, or ignore some files like <code>.html</code>, use <code>--include</code> and <code>exclude</code> flags. Multiple flags can be used, but they need to be placed in a certain order because <code>rsync</code> execute the early appearing rules first and exits if conditions meet. This is a bit like the logic <code>CASE</code> in SQL or other languages, where you usually want early-appearing flags to match specific conditions and the last flag catching all remaining cases.</p>
+<pre><code class="language-bash"><span class="hljs-comment"># If I want to download all but html from the source</span>
+<span class="hljs-comment"># Logic: if a file ends in *.html, exclude. For all remaining, include.</span>
+rsync -avP --exclude=<span class="hljs-string">&quot;*.html&quot;</span> --include=<span class="hljs-string">&quot;*&quot;</span>  username@address.of.hpc:some/remote/location/ <span class="hljs-built_in">local</span>/location/
+
+<span class="hljs-comment"># If I want to download only the .bam files</span>
+<span class="hljs-comment"># --include=&quot;*/&quot; ensures rsync looks inside all folder</span>
+<span class="hljs-comment"># -m removes empty folder</span>
+<span class="hljs-comment"># Logic: if it is a folder, keep it and look inside; then, if a file ends in *.bam, include. For all remaining, exclude.</span>
+rsync -avP -m --include=<span class="hljs-string">&quot;*/&quot;</span> --include=<span class="hljs-string">&quot;*.bam&quot;</span> --exclude=<span class="hljs-string">&quot;*&quot;</span>  username@address.of.hpc:some/remote/location/ <span class="hljs-built_in">local</span>/location/
+</code></pre>
+<ol start="2">
+<li><code>rclone</code>: I use this command to access data from <strong>cloud</strong>, like Google drive or onedrive. It is quick and useful for backing up data.</li>
+</ol>
+<p>Before start, use <code>rclone config</code> to create a remote.</p>
+<ul>
+<li>To set up a remote for Google drive, follow this <a href="https://rclone.org/drive/">guide</a>. When setting up for Google drive, you will be prompted to configure it as personal or team drive (which allows you to access team drive and folders shared with you).</li>
+<li>To set up a remote for Onedrive, follow this <a href="https://rclone.org/onedrive/">guide</a></li>
+</ul>
+<p>Once this step finishes, you can now access files in the remote. For example, if the remote's name is <code>myremote</code>:</p>
+<pre><code class="language-bash"><span class="hljs-comment"># Check the directory, and files</span>
+rclone lsd myremote:
+rclone <span class="hljs-built_in">ls</span> myremote:
+<span class="hljs-comment"># Or list files inside a specified location</span>
+rclone <span class="hljs-built_in">ls</span> myremote:my/own/directory
+</code></pre>
+<p>You can then copy data into specified location.</p>
+<pre><code class="language-bash">rclone copy -P --transfers=2 --checkers=8 --multi-thread-streams=8 --retries=5 myremote:some/remote/location/filename* <span class="hljs-built_in">local</span>/location 
+</code></pre>
+<p>You can use <code>--dry-run</code> in <code>rclone</code>, or <code>-n</code> in <code>rsync</code> to launch a dry run: no files will be actually transferred, and you can check if the commands are correct.</p>
+<hr>
+<h3 id="4-creating-and-removing-temporary-files--mktemp-trap">4. <em>Creating and removing temporary files | <code>mktemp</code>, <code>trap</code></em></h3>
+<p>In some cases, it might be necessary to create temporary files, when the output cannot be easily passed using <em>process or command substitution</em> (see below).</p>
+<ol>
+<li><code>mktemp</code>: This will create a temporary file or directory (using <code>-d</code> flag), by default at the temporary directory, and returns the names of file being created. You can capture the name using command substitution as follows:</li>
+</ol>
+<pre><code class="language-bash">mytmp=$(<span class="hljs-built_in">mktemp</span>)
+<span class="hljs-comment"># do something and save output to $mytmp</span>
+</code></pre>
+<p>Using <code>mktemp</code> avoids duplication of file names and is safe and easy to use.</p>
+<ol start="2">
+<li><code>trap command signal</code>: Using <code>trap</code> to remove temporary files. <code>trap</code> allows you to execute a command whenever a <em><a href="https://man7.org/linux/man-pages/man7/signal.7.html">signal</a></em> has been captured. In bash, there is a pseudo signal <code>EXIT</code>, which is triggers whenever the script stops or completes. Read a blog <a href="https://www.linuxjournal.com/content/bash-trap-command">here</a>.</li>
+</ol>
+<p>Combining <code>mktemp</code> and <code>trap</code> allows us to create a temporary file, and remove it automatically when finishing the script.</p>
+<pre><code class="language-bash">mytmp=$(<span class="hljs-built_in">mktemp</span>) <span class="hljs-comment"># Create tmp file</span>
+<span class="hljs-built_in">trap</span> <span class="hljs-string">&quot;rm -f <span class="hljs-variable">$mytmp</span>&quot;</span> EXIT
+<span class="hljs-comment"># Do anything with mytmp below...</span>
+</code></pre>
+<p>The command of <code>trap</code> can also be a function, allowing you to do something slightly more complicated.</p>
+<pre><code class="language-bash"><span class="hljs-keyword">function</span> <span class="hljs-function"><span class="hljs-title">myfunction</span></span>() {
+  <span class="hljs-built_in">local</span> exit_status=$?
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;Job completed! Exit status of previous command is <span class="hljs-variable">${exit_status}</span>&quot;</span>
+  <span class="hljs-built_in">times</span> <span class="hljs-comment"># CPU runtime</span>
+  <span class="hljs-built_in">rm</span> -f <span class="hljs-variable">$mytmp1</span> <span class="hljs-variable">$mytmp2</span> <span class="hljs-variable">$mytmp3</span>
+}
+<span class="hljs-built_in">trap</span> myfunction EXIT
+</code></pre>
+<h2 id="14-other-useful-features-in-bash">1.4 Other useful features in Bash</h2>
+<p>There are too many useful features and logics in bash. Here are a few things I found handy when working with the code.</p>
+<h3 id="1-parameter-expansion">1. Parameter expansion</h3>
+<p><a href="https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html">Parameter expansion</a> does something to the parameters / variables. There are many examples of <a href="https://mywiki.wooledge.org/BashFAQ/100">string manipulations</a>, but I used the following more frequently (And I am only familiar with them!).</p>
+<blockquote>
+<p>Note: <code>${}</code>, apart from being used in parameter expansion, can also be used in strings to avoid ambiguous interpretation of variables. If you have a variable <code>$fruit</code> and an array <code>$fruits</code>, isolating the variable like <code>&quot;These ${fruit}s were harvested&quot;</code> is clearer and less likely to make errors.</p>
+</blockquote>
+<ol>
+<li><strong>Removing suffix (<code>%</code>) / prefix (<code>#</code>)</strong>: This is helpful when your variables contain strings in some strict format, and provides a quicker way for parsing the information. Using two symbols <code>%%</code> and <code>##</code> stands for greedy approach -- they will remove the longest, rather than the shortest match. Note that the pattern is, again, <em>globbing characters</em> but not <em>regex</em>.<br>
+<strong>Example:</strong> When you want to create an output file based on  names of input files. For instance, I find it helpful to document the processing steps as suffix in the file name, so using parameter expansion or <code>basename</code> (see below) will be  helpful. <code>basename</code> has its own limitations: it starts a subprocess (slightly slower than expansion); does not remove prefix; and does not support glob characters when specifying suffix (i.e., the suffix must be known). There is a discussion <a href="https://unix.stackexchange.com/questions/253524/dirname-and-basename-vs-parameter-expansion">here</a> on <code>basename</code>, expansion, and <code>dirname</code>.</li>
+</ol>
+<pre><code class="language-bash"><span class="hljs-comment"># Let&#x27;s say we want to extract the sample ID and make a new name</span>
+filename=<span class="hljs-string">&quot;sample1_trimmed_aligned_filtered_blacklist_rm.bam&quot;</span>
+fileID=<span class="hljs-string">&quot;<span class="hljs-variable">${filename%%_*}</span>&quot;</span> <span class="hljs-comment"># Removes everything after first &quot;_&quot;</span>
+newfilename=<span class="hljs-string">&quot;<span class="hljs-variable">${fileID}</span>_peaks.bed&quot;</span>
+
+<span class="hljs-comment"># What if you have an array of filenames?</span>
+<span class="hljs-comment"># Using expansion avoids the for loop</span>
+<span class="hljs-built_in">readarray</span> -t myarray &lt; &lt;(<span class="hljs-built_in">printf</span> <span class="hljs-string">&quot;%s\n&quot;</span> *.bam)
+cleanarray=( <span class="hljs-string">&quot;<span class="hljs-variable">${myarray[@]%%_*}</span>_peaks.bed&quot;</span> )
+
+<span class="hljs-comment"># Alternatively, you can use basename command to remove directory and a specified suffix</span>
+filename2=<span class="hljs-string">&quot;some/location/sample2_trimmed.bam&quot;</span>
+fileID2=$(<span class="hljs-built_in">basename</span> <span class="hljs-string">&quot;<span class="hljs-variable">$filename2</span>&quot;</span> <span class="hljs-string">&quot;_trimmed.bam&quot;</span>)
+
+<span class="hljs-comment"># Same as the following two-step process:</span>
+step1=<span class="hljs-string">&quot;<span class="hljs-variable">${filename2##*/}</span>&quot;</span>; fileID2=<span class="hljs-string">&quot;<span class="hljs-variable">${step1%%_*}</span>&quot;</span>
+
+</code></pre>
+<ol start="2">
+<li><strong>Changing to uppercase (<code>^</code>) / lowercase (<code>,</code>)</strong>: This is useful when the variables or a list of text has not been formatted in a consistent way. Using <code>^^</code> or <code>,,</code> converts all characters mattching a pattern (any character if left blank).<br>
+<strong>Example:</strong> Across databases, gene symbols might have different formats. For example, some will make all characters uppercase (for proteins) whereas others only make the first letter uppercase (for genes). You can use the following to make all but first character in lowercase.</li>
+</ol>
+<pre><code class="language-bash">inarray=(<span class="hljs-string">&quot;egfr&quot;</span> <span class="hljs-string">&quot;Myc&quot;</span> <span class="hljs-string">&quot;BRCA1&quot;</span>)
+inarray_all_lower=( <span class="hljs-string">&quot;<span class="hljs-variable">${inarray[@]}</span>,,&quot;</span> )
+inarray_first_up=( <span class="hljs-string">&quot;<span class="hljs-variable">${inarray_all_lower[@]}</span>^&quot;</span> )
+</code></pre>
+<ol start="3">
+<li><strong>Replacing parts of the variable using <code>/</code> and <code>//</code></strong>: This is helpful for replacing parts of the variable in a quick and efficient ways. Using the format <code>${variable/feature/replacement}</code> only replaces once, whereas <code>${variable//feature/replacement}</code> will replace all matches.
+<strong>Example</strong>: For example, when you want to switch between &quot;chr&quot; and &quot;chromosome&quot;, or only changing suffix part of a file name. Replacement makes me thinks of <code>sed</code>, which has similar functionality. I think <code>//</code> is simplier, since you need to <code>echo</code> the variable as standard input in order to use <code>sed</code>, which is a two-step process. On the other hand, <code>sed</code> is useful for massive files or texts, whereas <code>//</code> only copes with small strings.</li>
+</ol>
+<pre><code class="language-bash"><span class="hljs-comment"># Let&#x27;s say this is the file and we want to make it &quot;trimmed&quot;</span>
+filename=<span class="hljs-string">&quot;some/location/sample1_raw.fasta&quot;</span>
+newname=<span class="hljs-string">&quot;<span class="hljs-variable">${filename/raw/trimmed}</span>&quot;</span>
+
+<span class="hljs-comment"># This is the same as...</span>
+newname=$(sed <span class="hljs-string">&quot;s|raw|trimmed|&quot;</span> &lt;&lt;&lt; <span class="hljs-string">&quot;<span class="hljs-variable">$filename</span>&quot;</span>)
+newname=$(<span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;<span class="hljs-variable">$filename</span>&quot;</span> | sed <span class="hljs-string">&quot;s|raw|trimmed|&quot;</span>)
+
+<span class="hljs-comment"># Final note: ${file//raw/trimmed} is the same as &quot;s|raw|trimmed|g&quot; in sed</span>
+</code></pre>
+<h3 id="2-process-substitutions--and-command-substitutions-">2. Process substitutions <code>&lt;()</code> and command substitutions <code>$()</code></h3>
+<p>These are useful in storing the output of commands without creating temporal files. Command substitution stores the printed output as single <strong>variable</strong>, whereas process substitution creates a file that can be passed to commands expecting a <strong>filename</strong>.</p>
+<p>There are already many instances of both substitutions earlier in this notebook. As another example:</p>
+<pre><code class="language-bash"><span class="hljs-comment"># Process substitution is used in commands expecting filenames</span>
+bedtools intersect -a &lt;(grep <span class="hljs-string">&quot;^chr1&quot;</span> <span class="hljs-string">&quot;<span class="hljs-variable">$bedfile1</span>&quot;</span>) -b <span class="hljs-string">&quot;<span class="hljs-variable">$bedfile2</span>&quot;</span> &gt; intersections.bed
+<span class="hljs-comment"># Essentially, the same as:</span>
+grep <span class="hljs-string">&quot;^chr1&quot;</span> <span class="hljs-variable">$bedfile1</span> &gt; <span class="hljs-variable">$tmpfile</span>
+bedtools intersect -a <span class="hljs-variable">$tmpfile</span> -b <span class="hljs-variable">$bedfile2</span> &gt; intersections.bed
+<span class="hljs-built_in">rm</span> <span class="hljs-variable">$tmpfile</span>
+<span class="hljs-comment"># There is also output process substitution &gt;()</span>
+
+<span class="hljs-comment"># Command substitution can be used in commands expecting variables</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;The total number of loops in this file is <span class="hljs-subst">$(wc -l &lt; $loopfile)</span>&quot;</span>
+</code></pre>
+<h2 id="15-brief-notes-on-hpc">1.5 Brief notes on HPC</h2>
+<p>HPC stands for high performance computing. These notes are specific for the HPC cluster at <a href="https://www.imperial.ac.uk/computational-methods/hpc/">Imperial</a>.</p>
+<p>There is a very detailed guideline on how to access the cluster <a href="https://icl-rcs-user-guide.readthedocs.io/en/latest/hpc/">here</a>. In brief:</p>
+<ol>
+<li>Login to a login node using <code>ssh</code>: <code>ssh username@login.cx3.hpc.imperial.ac.uk</code> Notice, the <code>username@address</code> shall also be used when you want to download or upload files from HPC. You can use a different address to access different <a href="https://icl-rcs-user-guide.readthedocs.io/en/latest/hpc/getting-started/using-ssh/">CPUs</a></li>
+</ol>
+<blockquote>
+<p><strong>Login node</strong>: only do simple tasks at the login node, like viewing a file using <code>head</code>. For more complicated tasks you should submit them as a <strong>PBS job</strong></p>
+</blockquote>
+<ol start="2">
+<li>Submitting a job with PBSPro workload manager. The syntax is simple and it will return a job ID.</li>
+</ol>
+<pre><code class="language-bash">qsub jobname.pbs
+<span class="hljs-comment"># jobID.pbs</span>
+</code></pre>
+<p>For a pbs job, it needs to have a header specifying details and requirement, starting with <code>#PBS</code> on each row. Here are some commonly used headers. Delete everything on the right of <code># &lt;--</code> if you want to copy this.</p>
+<pre><code class="language-bash"><span class="hljs-meta">#!/bin/bash    # &lt;-- she-bang: specifying interpreter</span>
+<span class="hljs-comment">#PBS -l walltime=HH:MM:SS # &lt;-- Max time the job shall run</span>
+<span class="hljs-comment">#PBS -l select=1:ncpus=N:mem=Mgb # &lt;-- Usually only change N and M and select one node</span>
+<span class="hljs-comment">#PBS -N the_name_of_my_job # &lt;-- Optional: Job name</span>
+<span class="hljs-comment">#PBS -J start-end # &lt;-- Optional: Submitting as job array</span>
+</code></pre>
+<p>Some of the specifications are required (<code>-l</code>), while others are optional (<code>-N -J</code> etc.).</p>
+<p><code>-l</code>: The amount of resoures required depend on the complexity of your script / job. For example a large sequencing data needs longer time to process. <a href="https://icl-rcs-user-guide.readthedocs.io/en/latest/hpc/queues/job-sizing-guidance/">Job sizing</a> also affects which queue the job enters. I think <em>small</em> jobs generally takes shorter queue time than <em>medium</em> jobs.</p>
+<p>The goal is to estimate an appropriate runtime and resource to balance the following: <strong>1)</strong> The job doesn't get killed halfway or due to lack of memory; <strong>2)</strong> The queue time is acceptable and you do not overestimate resources too much. If you ask for <code>ncpus=128</code> and <code>walltime=72:00:00</code> for a simple task, then certainly it can be completed but waiting time would be very, very long.</p>
+<p><code>-J</code>: This allows you to access a variable, <code>$PBS_ARRAY_INDEX</code> inside your file. In the header you will specify a range (<code>start</code> to <code>end</code>). By submitting the script you will launch an array of jobs, each with an array index taken from the range. You can also use stepping factor like <code>start-end:step</code> or limit number of jobs running at same time using <code>start-end%max_at_same_time</code>. Array job is useful when you have many samples and you wish to process them in the same manner, see discussions on <code>readarray</code> and <code>read</code> + <code>$PBS_ARRAY_INDEX</code>.</p>
+<p><strong>Personally</strong>, I feel that the array queue takes much longer than the normal queue. If you do not have <em>too many jobs</em> like only have 4-8 samples that takes 72 hours to complete and many cpus, I would say you can try to submit them as normal jobs by creating a submission script and passing the variable using <code>-v</code>. I am not encouraging to never submit jobs as queue jobs!</p>
+<pre><code class="language-bash"><span class="hljs-comment"># Create a script with resource requirement</span>
+<span class="hljs-comment"># It has a variable, $input, for input file paths</span>
+your_pbs_script=<span class="hljs-string">&quot;my_long_script.pbs&quot;</span>
+
+<span class="hljs-comment"># You can pass file paths like this</span>
+<span class="hljs-keyword">for</span> (path <span class="hljs-keyword">in</span> *.fasta); <span class="hljs-keyword">do</span>
+    fileID=$(<span class="hljs-built_in">basename</span> <span class="hljs-string">&quot;<span class="hljs-variable">$path</span>&quot;</span> <span class="hljs-string">&quot;.fasta&quot;</span>)
+    qsub -N <span class="hljs-string">&quot;log_<span class="hljs-variable">${fileID}</span>&quot;</span> -v input=<span class="hljs-string">&quot;<span class="hljs-variable">$path</span>&quot;</span> <span class="hljs-string">&quot;<span class="hljs-variable">$your_pbs_script</span>&quot;</span>
+<span class="hljs-keyword">done</span>
+</code></pre>
+<p><code>-W</code>: This allows the establishment of <em>dependency</em> -- for example, you can ask a job to submit only after a previous job enters certain condition. It is useful to process data sequentially if you have all scripts ready. For instance:</p>
+<pre><code class="language-bash">qsub trim_fasta.pbs 
+<span class="hljs-comment"># job1ID.pbs  ## Submitting job1 will return an ID</span>
+
+qsub -W depend=afterok:job1ID align_trimmed.pbs
+<span class="hljs-comment"># job2ID.pbs  ## This will also return an ID, but job2 is waiting for job1 to complete</span>
+
+qsub -W depend=afterok:job2ID align_call_peak.pbs
+<span class="hljs-comment"># job3ID.pbs</span>
+</code></pre>
+<ol start="3">
+<li>Checking job status using <code>qstat</code>: Using <code>qstat</code> on the new cluster requires a username to be supplied via <code>-u</code> flag, like:</li>
+</ol>
+<pre><code class="language-bash">qstat -u myusername
+</code></pre>
+<p>For convenience, you can save this command to a shorter name using <code>alias</code>, avoiding typing myusername every time:</p>
+<pre><code class="language-bash"><span class="hljs-comment"># Do in command line</span>
+<span class="hljs-built_in">alias</span> qs=<span class="hljs-string">&#x27;qstat -u myusername&#x27;</span> 
+qs
+</code></pre>
+<p>You can use <code>-q</code> flag to check the current queues, for example how many are waiting.</p>
+<ol start="4">
+<li>Removing a job using <code>qdel jobID</code></li>
+</ol>
+<h2 id="16-using-conda">1.6 Using conda</h2>
+<p>You can use conda in <code>wsl</code>, in HPC login node, or in Windows by downloading Anaconda Prompt. Conda is helpful for regulating the environments i.e. the packages you use. For an old tool, you might want to create a specific environment since it requires many dependencies</p>
+<p>To start using conda, run the following script once:</p>
+<pre><code class="language-bash">module load miniforge/3
+miniforge-setup
+</code></pre>
+<p>This will set up a directory at your <code>$HOME</code> for miniforge. Then, each time you would like to use conda, type the following:</p>
+<pre><code class="language-bash"><span class="hljs-built_in">eval</span> <span class="hljs-string">&quot;<span class="hljs-subst">$(~/miniforge3/bin/conda shell.bash hook)</span>&quot;</span>
+</code></pre>
+<p>Then, you can create, delete, or download something inside conda environment.</p>
+<pre><code class="language-bash"><span class="hljs-comment"># View, create, delete environments</span>
+conda info --envs <span class="hljs-comment"># Listing all conda environments</span>
+conda create -n myenv <span class="hljs-comment"># Create new environment</span>
+conda remove -n myenv --all <span class="hljs-comment"># Remove myenv, and all packages inside</span>
+
+<span class="hljs-comment"># Activate and deactivate</span>
+conda activate myenv <span class="hljs-comment"># Access packages inside &quot;myenv&quot;</span>
+conda deactivate <span class="hljs-comment"># Leaving the environment</span>
+
+<span class="hljs-comment"># Setting channel priorities to avoid dependency issues</span>
+<span class="hljs-comment"># Conda-forge &gt; bioconda &gt; default</span>
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --<span class="hljs-built_in">set</span> channel_priority strict
+
+<span class="hljs-comment"># Installing inside package</span>
+mamba install package=version <span class="hljs-comment"># Specified version</span>
+mamba install channel::package <span class="hljs-comment"># Specified channel</span>
+conda list package <span class="hljs-comment"># Check existence and version</span>
+<span class="hljs-built_in">which</span> package <span class="hljs-comment"># Show location</span>
+
+<span class="hljs-comment"># Exporting environment for reproducibility</span>
+conda <span class="hljs-built_in">env</span> <span class="hljs-built_in">export</span> &gt; environment.yml <span class="hljs-comment"># Export to yml</span>
+conda <span class="hljs-built_in">env</span> create --name myenv2 -f environment.yml <span class="hljs-comment"># Recreate from yml</span>
+</code></pre>
+
+            <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
+            
+        </body>
+        </html>

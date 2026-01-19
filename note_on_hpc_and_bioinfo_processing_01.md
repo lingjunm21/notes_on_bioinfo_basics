@@ -1,3 +1,4 @@
+<!-- title: Bash -->
 **Notes on HPC and bioinformatics**
 
 These are a series of notes that I made after completing my thesis project. I wish to record the packages and some of the scripts that I frequently used throughout the project. Please note that the information may not be 100% correct so please use the code with caution.
@@ -10,16 +11,19 @@ Also for myself: [which types of languages get highlighted by md](https://github
 - [Section 1: Bash](#section-1-bash)
   - [1.1 Using bash / linux in Windows](#11-using-bash--linux-in-windows)
   - [1.2 Basic bash commands](#12-basic-bash-commands)
-    - [1. *Navigating around the system*](#1-navigating-around-the-system)
-    - [2. *Printing something out*](#2-printing-something-out)
-    - [3. *Creating and reading a file*](#3-creating-and-reading-a-file)
+    - [1. *Navigating around the system | `cd`, `pwd`, `ls`, `ll`, `du`*](#1-navigating-around-the-system--cd-pwd-ls-ll-du)
+    - [2. *Printing something out | `echo`, `cat`*](#2-printing-something-out--echo-cat)
+    - [3. *Creating and reading a file | `touch`, `>`, `nano`, `cp`, `mv`, `head`, `tail`, `cat`, `less`, `read`, `readarray`*](#3-creating-and-reading-a-file--touch--nano-cp-mv-head-tail-cat-less-read-readarray)
   - [1.3 (Slightly) Advanced bash commands](#13-slightly-advanced-bash-commands)
-    - [1. *Changing file contents, searching, etc.*](#1-changing-file-contents-searching-etc)
-    - [2. *awk*](#2-awk)
-    - [3. *Moving files around using `rsync` and `rclone`*](#3-moving-files-around-using-rsync-and-rclone)
+    - [1. *Changing file contents, searching, etc. | `wc`, `cut`, `sed`, `sort`, `grep`*](#1-changing-file-contents-searching-etc--wc-cut-sed-sort-grep)
+    - [2. *Performing complex  row-wise behaviours | `awk`*](#2-performing-complex--row-wise-behaviours--awk)
+    - [3. *Transferring files between local, cluster or cloud | `rsync`, `rclone`*](#3-transferring-files-between-local-cluster-or-cloud--rsync-rclone)
+    - [4. *Creating and removing temporary files | `mktemp`, `trap`*](#4-creating-and-removing-temporary-files--mktemp-trap)
   - [1.4 Other useful features in Bash](#14-other-useful-features-in-bash)
     - [1. Parameter expansion](#1-parameter-expansion)
     - [2. Process substitutions `<()` and command substitutions `$()`](#2-process-substitutions--and-command-substitutions-)
+  - [1.5 Brief notes on HPC](#15-brief-notes-on-hpc)
+  - [1.6 Using conda](#16-using-conda)
 
 ## 1.1 Using bash / linux in Windows
 
@@ -67,11 +71,11 @@ These are the most basic commands for viewing, navigating, and creating files. M
 
 ---
 
-### 1. *Navigating around the system*
+### 1. *Navigating around the system | `cd`, `pwd`, `ls`, `ll`, `du`*
 
-`cd directory` and `pwd`: `cd` will let you go to a specified location, whereas `pwd` prints the current directory.
+1. `cd directory` and `pwd`: `cd` will let you go to a specified location, whereas `pwd` prints the current directory.
 
-`ls location` and `ll location`: shows the names and information of files listed in a named directory. They can also be combined with *globbing characters* to specifically look for files with certain pattern. 
+2. `ls location` and `ll location`: shows the names and information of files listed in a named directory. They can also be combined with *globbing characters* to specifically look for files with certain pattern. 
 
 ```bash
 ls myprotein_[abc].pdf
@@ -87,20 +91,20 @@ ls myprotein_[abc].pdf
 >
 > Note that glob can be used with many commands that requires a filename. When used, they cannot be quoted. Finally, glob is different from **regular expression**.
 
-`du location`: Less about navigating, this commands prints the size of files in specified directory. Use `du -h` so results are human-readable.
+3. `du location`: Less about navigating, this commands prints the size of files in specified directory. Use `du -h` so results are human-readable.
 
 ---
 
-### 2. *Printing something out*
+### 2. *Printing something out | `echo`, `cat`*
 
-`echo something`: print something, useful when providing a message like current file being processed.
+1. `echo something`: print something, useful when providing a message like current file being processed.
 
-`cat filename`: it requires *files* as input and displays the contents. For example, you can use `cat file1 file2` to combine multiple files, or use `cat -A file` to show the non-printing characters.\
+2. `cat filename`: it requires *files* as input and displays the contents. For example, you can use `cat file1 file2` to combine multiple files, or use `cat -A file` to show the non-printing characters.\
 `-A` flag is particularly useful to check: **1)** if a tab separated file (tsv) is correctly separated, with `^I` between columns; **2)** if there are any *carriage return* `\r` at the end of each row (which is a feature of file created in Windows). Do this checking when `sed` or `cut` do something weird.
 
 ---
 
-### 3. *Creating and reading a file*
+### 3. *Creating and reading a file | `touch`, `>`, `nano`, `cp`, `mv`, `head`, `tail`, `cat`, `less`, `read`, `readarray`*
 
 There are many different ways to create a new file.
 
@@ -167,11 +171,11 @@ echo "Currently processing: ${fileproc}"
 
 ## 1.3 (Slightly) Advanced bash commands
 
-### 1. *Changing file contents, searching, etc.*
+### 1. *Changing file contents, searching, etc. | `wc`, `cut`, `sed`, `sort`, `grep`*
 
 These commands will do something to files. Here is only a basic introduction so I will attach links from w3schools which is far more informative than mine, but I will try to include how commands might be useful.
 
-`wc filename`: This returns the length of the file, in terms of the character, word, and row count. As this command has a habbit of printing filename with its output, you can mute this behaviour as follows:
+1. `wc filename`: This returns the length of the file, in terms of the character, word, and row count. As this command has a habbit of printing filename with its output, you can mute this behaviour as follows:
 
 ```bash
 ### Muting filename from wc
@@ -184,12 +188,12 @@ grep "pattern" filename | wc -l
 
 **Example:** I sometimes use this command to roughly understand the scale of your outputs, such as using `wc -l < filename` on `bed` files to study the number of peaks from Chip-seq experiment.
 
-`cut -f1 -d, filename`: This allows you to select some columns. First by some delimiter using `-d`, and retain some columns based on their location (counting from 1) using `-f`. Such as: `cut -d, -f2-4 something.csv` for a csv file. You do not need to specify delimiter if tab-separated (see if there is `^I` between columns). `cut` is simple and quick to use but it is also functionally simple. If `cut` is not working or behaving weirdly, use `awk` instead (see below); additionally, if you wish to reorder columns, use `awk`.\
+2. `cut -f1 -d, filename`: This allows you to select some columns. First by some delimiter using `-d`, and retain some columns based on their location (counting from 1) using `-f`. Such as: `cut -d, -f2-4 something.csv` for a csv file. You do not need to specify delimiter if tab-separated (see if there is `^I` between columns). `cut` is simple and quick to use but it is also functionally simple. If `cut` is not working or behaving weirdly, use `awk` instead (see below); additionally, if you wish to reorder columns, use `awk`.\
 **Example:** This is useful if you want to find data from a specified column (i.e. a specific variable), for example if you only want the gene symbol from a gtf file. 
 
-`sed "s|pattern1|replacement|behaviour" filename`: This is used to replace something with particular pattern, either in place (with flag `-i`) or redirect to a new file (`sed "s|p1|r1|g" filename > newfile`; `g` stands for global and ensures substitution is made for all matched patterns). See more [here](https://www.w3schools.com/bash/bash_sed.php). You can alternatively separate the delimiter using `/` or `:` just ensure it is consistent.
+3. `sed "s|pattern1|replacement|behaviour" filename`: This is used to replace something with particular pattern, either in place (with flag `-i`) or redirect to a new file (`sed "s|p1|r1|g" filename > newfile`; `g` stands for global and ensures substitution is made for all matched patterns). See more [here](https://www.w3schools.com/bash/bash_sed.php). You can alternatively separate the delimiter using `/` or `:` just ensure it is consistent.
 
-`sort`: It is often used with the `-k` flag to sort a file based on specific columns, or use `-u` to remove duplicated rows. See more [here](https://www.w3schools.com/bash/bash_sort.php).\
+4. `sort`: It is often used with the `-k` flag to sort a file based on specific columns, or use `-u` to remove duplicated rows. See more [here](https://www.w3schools.com/bash/bash_sort.php).\
 **Example:** This command is frequently used with `bed` or `bedpe` (genomic coordinates) file, where rows need to be ordered based on their positions in the genome. It functions similarly as [`bedtools sort`](https://bedtools.readthedocs.io/en/latest/content/tools/sort.html). The most often usage is: 
 
 ```bash
@@ -199,12 +203,12 @@ sort -k 1,1 2,2n file1.bed > file1_sortByCoord.bed
 sort -k 1,1 2,2n 4,4 5,5n file2.bedpe > file2_sortByCoord.bedpe
 ```
 
-`grep "pattern" filename`: This is used for searching a specific pattern in a file, and is poswerful when using in combination with regular expressions. See more [here](https://www.w3schools.com/bash/bash_grep.php).\
+5. `grep "pattern" filename`: This is used for searching a specific pattern in a file, and is poswerful when using in combination with regular expressions. See more [here](https://www.w3schools.com/bash/bash_grep.php).\
 **Example:** For instance, when you want to subset a dataset based on presence of a specific pattern, or selecting rows matching an ID. You can also remove specific rows using `-v` flag, like `grep -v "^#"` to remove annotation / header rows in a gtf file.
 
 ---
 
-### 2. *awk*
+### 2. *Performing complex  row-wise behaviours | `awk`*
 
 `awk` should belong to the previous section. However, as this tool is **exteremely useful** during my processing I want to write a bit more. Note that `awk` has a slightly different grammar than `bash` and its own functions.
 
@@ -244,7 +248,7 @@ mean_no_zero=$(awk 'BEGIN {nrow = 0; sum = 0} {if ($2 != 0) {nrow ++; sum += $2}
 awk -F, -v OFS="," 'NR == FNR {a[$1]; next} $1 in a {print $0}' cell1_DEG.csv cell2_DEG.csv > cell2_DEG_in_cell1.csv
 ```
     
-6. **Take advantage of `awk` functions to achieve more complicated behaviour**. For example, combining `split()` and `match()` functions in `awk` to obtain data from complex tables in a clear and readable manner. Let's say we want to separate the column 9 in a Gencode GTF annotation file. This can be achieved using the following:
+6. **Take advantage of `awk` functions to achieve more complicated behaviour**. For example, combining `split()` and `match()` functions in `awk` to obtain data from complex tables in a clear and readable manner. Let's say we want to separate the column 9 in a [Gencode GTF annotation file](https://www.gencodegenes.org/human/). This can be achieved using the following:
 
 ```bash
 # If I want a cleaned bed file of TSS from gencode "genes"
@@ -283,16 +287,31 @@ There are definitely other exciting applications of `awk` that I missed at prese
 
 ---
 
-### 3. *Moving files around using `rsync` and `rclone`*
+### 3. *Transferring files between local, cluster or cloud | `rsync`, `rclone`*
 
 These two functions allows you to move files around and access remote data, such as those stored in a Google drive or onedrive.
 
-`rsync`: This command is useful in copying large file and prevents data loss. It can be used to transfer data within linux or between **cluster** (like HPC):
+1. `rsync`: This command is useful in copying large file and prevents data loss. It can be used to transfer data within linux or between **cluster** (like HPC):
 
 ```bash
 rsync -avP username@address.of.hpc:some/remote/location/filename* local/location
 ```
-`rclone`: I use this command to access data from **cloud**, like Google drive or onedrive. It is quick and useful for backing up data.
+
+This command recursively retrieve all files at `some/remote/location` and store them at `local/location`, while tracking progress and providing a progress bar. If you want to access some files ending only in some suffix like `.bam`, or ignore some files like `.html`, use `--include` and `exclude` flags. Multiple flags can be used, but they need to be placed in a certain order because `rsync` execute the early appearing rules first and exits if conditions meet. This is a bit like the logic `CASE` in SQL or other languages, where you usually want early-appearing flags to match specific conditions and the last flag catching all remaining cases.
+
+```bash
+# If I want to download all but html from the source
+# Logic: if a file ends in *.html, exclude. For all remaining, include.
+rsync -avP --exclude="*.html" --include="*"  username@address.of.hpc:some/remote/location/ local/location/
+
+# If I want to download only the .bam files
+# --include="*/" ensures rsync looks inside all folder
+# -m removes empty folder
+# Logic: if it is a folder, keep it and look inside; then, if a file ends in *.bam, include. For all remaining, exclude.
+rsync -avP -m --include="*/" --include="*.bam" --exclude="*"  username@address.of.hpc:some/remote/location/ local/location/
+```
+
+2. `rclone`: I use this command to access data from **cloud**, like Google drive or onedrive. It is quick and useful for backing up data.
 
 Before start, use `rclone config` to create a remote.
 - To set up a remote for Google drive, follow this [guide](https://rclone.org/drive/). When setting up for Google drive, you will be prompted to configure it as personal or team drive (which allows you to access team drive and folders shared with you). 
@@ -314,6 +333,40 @@ rclone copy -P --transfers=2 --checkers=8 --multi-thread-streams=8 --retries=5 m
 ```
 
 You can use `--dry-run` in `rclone`, or `-n` in `rsync` to launch a dry run: no files will be actually transferred, and you can check if the commands are correct. 
+
+---
+### 4. *Creating and removing temporary files | `mktemp`, `trap`*
+
+In some cases, it might be necessary to create temporary files, when the output cannot be easily passed using *process or command substitution* (see below).
+
+1. `mktemp`: This will create a temporary file or directory (using `-d` flag), by default at the temporary directory, and returns the names of file being created. You can capture the name using command substitution as follows:
+```bash
+mytmp=$(mktemp)
+# do something and save output to $mytmp
+```
+Using `mktemp` avoids duplication of file names and is safe and easy to use.
+
+2. `trap command signal`: Using `trap` to remove temporary files. `trap` allows you to execute a command whenever a *[signal](https://man7.org/linux/man-pages/man7/signal.7.html)* has been captured. In bash, there is a pseudo signal `EXIT`, which is triggers whenever the script stops or completes. Read a blog [here](https://www.linuxjournal.com/content/bash-trap-command).
+  
+Combining `mktemp` and `trap` allows us to create a temporary file, and remove it automatically when finishing the script.
+
+```bash
+mytmp=$(mktemp) # Create tmp file
+trap "rm -f $mytmp" EXIT
+# Do anything with mytmp below...
+```
+
+The command of `trap` can also be a function, allowing you to do something slightly more complicated.
+
+```bash
+function myfunction() {
+  local exit_status=$?
+  echo "Job completed! Exit status of previous command is ${exit_status}"
+  times # CPU runtime
+  rm -f $mytmp1 $mytmp2 $mytmp3
+}
+trap myfunction EXIT
+```
 
 ## 1.4 Other useful features in Bash
 
@@ -389,4 +442,121 @@ rm $tmpfile
 
 # Command substitution can be used in commands expecting variables
 echo "The total number of loops in this file is $(wc -l < $loopfile)"
+```
+
+## 1.5 Brief notes on HPC
+
+HPC stands for high performance computing. These notes are specific for the HPC cluster at [Imperial](https://www.imperial.ac.uk/computational-methods/hpc/).
+
+There is a very detailed guideline on how to access the cluster [here](https://icl-rcs-user-guide.readthedocs.io/en/latest/hpc/). In brief:
+
+1. Login to a login node using `ssh`: `ssh username@login.cx3.hpc.imperial.ac.uk` Notice, the `username@address` shall also be used when you want to download or upload files from HPC. You can use a different address to access different [CPUs](https://icl-rcs-user-guide.readthedocs.io/en/latest/hpc/getting-started/using-ssh/)
+  
+> **Login node**: only do simple tasks at the login node, like viewing a file using `head`. For more complicated tasks you should submit them as a **PBS job**
+
+2. Submitting a job with PBSPro workload manager. The syntax is simple and it will return a job ID.
+```bash
+qsub jobname.pbs
+# jobID.pbs
+```
+For a pbs job, it needs to have a header specifying details and requirement, starting with `#PBS` on each row. Here are some commonly used headers. Delete everything on the right of `# <--` if you want to copy this. 
+```bash
+#!/bin/bash    # <-- she-bang: specifying interpreter
+#PBS -l walltime=HH:MM:SS # <-- Max time the job shall run
+#PBS -l select=1:ncpus=N:mem=Mgb # <-- Usually only change N and M and select one node
+#PBS -N the_name_of_my_job # <-- Optional: Job name
+#PBS -J start-end # <-- Optional: Submitting as job array
+```
+
+Some of the specifications are required (`-l`), while others are optional (`-N -J` etc.). 
+
+`-l`: The amount of resoures required depend on the complexity of your script / job. For example a large sequencing data needs longer time to process. [Job sizing](https://icl-rcs-user-guide.readthedocs.io/en/latest/hpc/queues/job-sizing-guidance/) also affects which queue the job enters. I think *small* jobs generally takes shorter queue time than *medium* jobs. 
+
+The goal is to estimate an appropriate runtime and resource to balance the following: **1)** The job doesn't get killed halfway or due to lack of memory; **2)** The queue time is acceptable and you do not overestimate resources too much. If you ask for `ncpus=128` and `walltime=72:00:00` for a simple task, then certainly it can be completed but waiting time would be very, very long.
+
+`-J`: This allows you to access a variable, `$PBS_ARRAY_INDEX` inside your file. In the header you will specify a range (`start` to `end`). By submitting the script you will launch an array of jobs, each with an array index taken from the range. You can also use stepping factor like `start-end:step` or limit number of jobs running at same time using `start-end%max_at_same_time`. Array job is useful when you have many samples and you wish to process them in the same manner, see discussions on `readarray` and `read` + `$PBS_ARRAY_INDEX`. 
+
+**Personally**, I feel that the array queue takes much longer than the normal queue. If you do not have *too many jobs* like only have 4-8 samples that takes 72 hours to complete and many cpus, I would say you can try to submit them as normal jobs by creating a submission script and passing the variable using `-v`. I am not encouraging to never submit jobs as queue jobs!
+
+```bash
+# Create a script with resource requirement
+# It has a variable, $input, for input file paths
+your_pbs_script="my_long_script.pbs"
+
+# You can pass file paths like this
+for (path in *.fasta); do
+    fileID=$(basename "$path" ".fasta")
+    qsub -N "log_${fileID}" -v input="$path" "$your_pbs_script"
+done
+```
+
+`-W`: This allows the establishment of *dependency* -- for example, you can ask a job to submit only after a previous job enters certain condition. It is useful to process data sequentially if you have all scripts ready. For instance:
+
+```bash
+qsub trim_fasta.pbs 
+# job1ID.pbs  ## Submitting job1 will return an ID
+
+qsub -W depend=afterok:job1ID align_trimmed.pbs
+# job2ID.pbs  ## This will also return an ID, but job2 is waiting for job1 to complete
+
+qsub -W depend=afterok:job2ID align_call_peak.pbs
+# job3ID.pbs
+```
+3. Checking job status using `qstat`: Using `qstat` on the new cluster requires a username to be supplied via `-u` flag, like:
+```bash
+qstat -u myusername
+```
+For convenience, you can save this command to a shorter name using `alias`, avoiding typing myusername every time:
+
+```bash
+# Do in command line
+alias qs='qstat -u myusername' 
+qs
+```
+You can use `-q` flag to check the current queues, for example how many are waiting.
+
+4. Removing a job using `qdel jobID`
+
+## 1.6 Using conda
+
+You can use conda in `wsl`, in HPC login node, or in Windows by downloading Anaconda Prompt. Conda is helpful for regulating the environments i.e. the packages you use. For an old tool, you might want to create a specific environment since it requires many dependencies 
+
+To start using conda, run the following script once:
+```bash
+module load miniforge/3
+miniforge-setup
+```
+This will set up a directory at your `$HOME` for miniforge. Then, each time you would like to use conda, type the following:
+
+```bash
+eval "$(~/miniforge3/bin/conda shell.bash hook)"
+```
+
+Then, you can create, delete, or download something inside conda environment.
+```bash
+# View, create, delete environments
+conda info --envs # Listing all conda environments
+conda create -n myenv # Create new environment
+conda remove -n myenv --all # Remove myenv, and all packages inside
+
+# Activate and deactivate
+conda activate myenv # Access packages inside "myenv"
+conda deactivate # Leaving the environment
+
+# Setting channel priorities to avoid dependency issues
+# Conda-forge > bioconda > default
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --set channel_priority strict
+
+# Installing inside package
+mamba install package=version # Specified version
+mamba install channel::package # Specified channel
+conda list package # Check existence and version
+which package # Show location
+
+# Exporting environment for reproducibility
+conda env export > environment.yml # Export to yml
+conda env create --name myenv2 -f environment.yml # Recreate from yml
 ```
