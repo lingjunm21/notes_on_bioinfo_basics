@@ -4,7 +4,7 @@
 These are a series of notes that I made after completing my thesis project. I wish to record the packages and some of the scripts that I frequently used throughout the project. Please note that the information may not be 100% correct so please use the code with caution.
 
 
-# Section 2: Bulk RNA Sequencing for Differential Gene Expresison Analysis (Part 1)
+# Section 2: Bulk RNA Sequencing for Differential Gene Expression (DGE) Analysis (Part 1)
 
 In this section, we discuss the overall procedure for bulk RNA-seq analysis for DGE analysis, specifically in pair-end context (single-end scripts are very similar!). Due to my (unexpected) wordiness this section will only cover **Quality control and read trimming** and **Alignment**.
 
@@ -501,5 +501,6 @@ For example:
 Additionally, depending on your goal, `RSeQC` can generate other metrics, such as `junction_saturation.py` to see if read depth is sufficient for alternative splicing analysis.
 
 Overall, the key of quality checking is to always perform and interpret QC results with respect to your library kit and experiment aim. **There is no absolute universal thresholds of QC metrics, and you should always adjust your expectation depending on your exact situation.**
+
 
 *That's it!*
