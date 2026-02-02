@@ -44,7 +44,7 @@ The current note is specific for analysis of gene expression. Here is an overvie
 4. **Differential gene expression analysis** (input: count table; metadata specifying experimental design) Differential gene expression analysis are directly performed on *raw* count table. Gene expression can be subsequently visualised using figures like *volcano plots* or *clustered heatmaps*.
 5. **Functional analysis** After DEA, several downstream analyses can be performed to investigate features of the *differentially expressed genes*. For instance, *gene ontology analysis* and *gene set enrichment analysis* help to understand the functional roles of the differentially expressed genes. Additionally, interactions of these genes of interest (so called *network analysis*) can be studied using tools like *WGCNA* or *STRINGdb*.
  
-![Figure 1](image-6.png)
+![Figure 1](./figures/overview_RNAseq.png)
 *Figure 1: Overview of bulk RNAseq processing.* QC, quality checking.
 
 > **A brief note on transcript quanification tools**
@@ -76,17 +76,17 @@ multiqc *.html
 ```
 In the aggregated report, there are several statistics. Here are a few examples:
 1. **Sequence Quality Histogram**: Mean Phred score for each position in the read. Usually, tails will have lower Phred scores, which can be improved via *end trimming*. Ideally, reads shall have *Phred Score above 20 - 25* for entire length.
-   ![example_1](image-2.png) 
+   ![example_1](./figures/fastqc_1.png) 
 *Samples with a dip in quality at 3' end can be rescued using quality trimming.*
 
 2. **Per Base Sequence Content**: The proportion of each base position for which each of the four normal DNA bases has been called. Ideally, the proportion should be consistent across the read (i.e., 4 horizontal lines). It is common that the first few bases at heads have varying proportions (see below for an example). This is caused by the use of *randomised hexamers* as primers in next-generation sequencing. While the appearance of these fluctuations may cause fastq to generate a lower score in quality checks, they do not mean the library has low quality and shall be safely ignored.
-   ![example_2](image-3.png)
+   ![example_2](./figures/fastqc_2.png)
 *The first 10 bases in this figure can be ignored*
 3. **Per Sequence GC content**: The GC content shall be in a *bell curve*. Two peaks / Binomial distribution likely indicates contaminations, such as from bacterial genome.
-   ![example_3](image-17.png)
+   ![example_3](./figures/fastqc_3_problematic.png)
 *This is a figure I took from this [discussion](https://www.reddit.com/r/bioinformatics/comments/1imuyho/fastqc_gc_content/), where the author likely had some unknown contamination.*
-4. **Top overrepresented sequences** and **Adapter content**: There sections are useful in determining adapter sequences that shall be removed during read-trimming. Also, look for appearances of repetitive nucleotides (such as poly-Gs) at Top overrepresented sequences sections, as they represent cases where two-colour system sequencers fail to read the sequence and shall also be removed. They often cannot be detected by simple quality-trimming, since sequencers will assign a very high Phred score to these poly-Gs. After trimming the adapters, you may want to do `fastqc` check again and compare these sections to see if trimming is effective.
-![example_4](image-4.png)
+1. **Top overrepresented sequences** and **Adapter content**: There sections are useful in determining adapter sequences that shall be removed during read-trimming. Also, look for appearances of repetitive nucleotides (such as poly-Gs) at Top overrepresented sequences sections, as they represent cases where two-colour system sequencers fail to read the sequence and shall also be removed. They often cannot be detected by simple quality-trimming, since sequencers will assign a very high Phred score to these poly-Gs. After trimming the adapters, you may want to do `fastqc` check again and compare these sections to see if trimming is effective.
+![example_4](./figures/fastqc_4.png)
 
 `fastqc` check shall be used to guide downstream processing. For example, consider the following questions:
 - Does read have very low Phred scores? Are there fluctuations in sequence content throughout the read? Are there very high per base N content? -> Perhaps the library has very low quality and the sequencing need to be repeated.
@@ -114,7 +114,7 @@ Before using `cutadapt`, it is important to know the adapter sequences that you 
 >
 > You can usually find adapter sequences at websites of the  library prep kit. If you do not know the kit used for your data, it is often useful to study the `fastqc` reports, specifically "Adapter content" section, since `fastqc` will try to guess the kit being used based on overrepresented sequences.
 >  
-> ![Determining adapters for Illumina TruSeq](image-5.png)
+> ![Determining adapters for Illumina TruSeq](./figures/adapter_illumina.png)
 > *Figure: Removing adapters for TruSeq*. All sequences can be found [here](https://support-docs.illumina.com/SHARE/AdapterSequences/Content/UDIndexes.htm).
 
 After finding the adapter sequences, it's time to use `cutadapt` to remove them. Flags `-a` and `-A` specifies the 3' adapter for `R1` and `R2`, respectively. 
@@ -281,11 +281,11 @@ Here, I will discuss several metrics to assess when performing quality-checking 
 ### 4.1 QC on `STAR` log files | total reads, unique alignment rate
 Alignment using `STAR` will generate several log files. Specifically, `Log.final.out` summarises the mapping statistics. Aggregating `Log.final.out` will generate two sections in `multiqc`. Firstly, there will be a table summarising all QC statistics:
 
-![STAR-QC-1](image-7.png)
+![STAR-QC-1](./figures/STAR_metrics.png)
 
 Alignment and unique alignment rates are also plotted as bar plots.
 
-![STAR-QC-2](image-8.png)
+![STAR-QC-2](./figures/STAR_alignment.png)
 
 From these results, the QC statistics that we would want to particularly focus on are **Total reads**, **Aligned**, and **Uniq aligned**.
 
@@ -297,7 +297,7 @@ Read depth is a key feature of any sequencing data that limits analysis results.
 - *Expectations for good quality data* There are varying standards for the minimal number of aligned reads, but in general, each sample should have at least 10 - 15 million reads. According to [ENCODE Bulk RNAseq criteria](https://www.encodeproject.org/data-standards/rna-seq/long-rnas/), each sample needs to have above 30 million aligned reads, which is more difficult to achieve. 
 - *Shall I have as many reads as possible? Not really.* As stated in this [workshop](https://hbctraining.github.io/DGE_workshop_salmon/lessons/01_DGE_setup_and_overview.html), increasing read depth is less cost-effective in identifying DEGs than adding more replicates.
 
-![alt text](image-9.png)
+![Depth - replicate](./figures/depth_replicate.png)
 *Increasing the replicates is preferred over deepening the number of reads. As long as read depth is acceptable, it is better to increase reps to detect more DE genes.*
 
 #### 4.1.2 Aligned and Uniq aligned rates
@@ -403,10 +403,10 @@ These symbols are then translated to "sense" or "antisense" labels (with respect
 - *Expectations for good quality data* Ideally, for unstranded experiment, proportion of sense and antisense reads should be the same (i.e. between 40-60 for each). For stranded experiment, proportion of reads from same strand should be higher than **80-90%**. 
 - *Low quality sample* The sample has low quality when the kit strandness is inconsistent with predicted strandness. For example, antisense read proportion below 60% for an antisense experiment likely indicate **contamination** and should be carefully inspected.
 
-![QC-strandness-antisense](image-11.png)
+![QC-strandness-antisense](./figures/strandness_antisense.png)
 *Example of a stranded experiment - Can you tell its strandness?*
 
-![QC-strandness2-unstranded](image-14.png)
+![QC-strandness2-unstranded](./figures/strandness_unstranded.png)
 *How can you tell that the data is unstranded?* ([Ref](https://training.galaxyproject.org/training-material/topics/transcriptomics/tutorials/rna-seq-reads-to-counts/tutorial.html))
 
 > **More on stranded libraries: what are them, and why is it important to know them?**
@@ -422,7 +422,7 @@ These symbols are then translated to "sense" or "antisense" labels (with respect
 > One common method used to generate stranded libraries is the dUTP method, where **R1 keeps information from the antisense strand**. In this method, strand selection is performed during cDNA synthesis. The first strand cDNA (antisense) is synthesised using mRNA as template. Then, the second strand is synthesised using **dUTP** instead of dTTP. This double strand structure enables efficient ligation to Y-adapters, and fragment at second strand can be subsequently removed using **UDG** [uracil DNA glycosylase] enzyme following ligation. Since the Y-adapters are *asymmetric* (i.e. the adapter sequence being ligated at 5' and 3' ends are different), the strandness information is preserved throughout subsequent PCR amplification and sequencing.
 >
 > The method is visualised in this nice [video](https://www.youtube.com/watch?v=OoBITqzcy1Y) and the figure below. 
-> ![alt text](image-10.png)
+> ![dUTP](./figures/dUTP_method.png)
 >
 > *Providing strandness for feature counters*
 >
@@ -446,8 +446,8 @@ The Read distribution section displays the percentage of genomic feature assigne
 - *Expectations for good quality data* For DGE analysis (enriched in mRNA), you shall expect the majority of reads (above **70%**) corresponding to exon-associated features (for `RSeQC`, this would be the sum of CDX_Exons and Exons at 5' and 3' UTR).
 - *Shall I always expect low percentage of intronic reads?* Similar to strandness, reads will have different distribution patterns if a different library preparation method is used. For example, in *total RNA-seq* there will be more intronic RNAs.
 
-![QC-read-distribution](image-12.png)
-*While both tools are able t produce this section, `RSeQC` uses a more detailed feature category than `qualimap`.*
+![QC-read-distribution](./figures/rseqc_feature.png)
+*While both tools are able to produce this section, `RSeQC` uses a more detailed feature category than `qualimap`.*
 
 ---
 
@@ -459,10 +459,10 @@ Gene coverage profiles show the integrity of RNA during seqeuncing.
 - *Expectations for good quality data* The gene coverage is expected to be **consistent** throughout the gene body, and there shall be **no noticeable bias at 5' or 3' ends**. It is common to have dips at start (5') and end (3') on the X axis. Bias towards 3' end may suggest[ degradation of RNA](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0091851) at 5' ends, which is indicative of low quality. 
 - *Exceptions to this rule* For data coming from 3' assay (such as [QuantSeq](https://www.lexogen.com/quantseq-family/)), peaks at 3' tail are actually expected and indicates that the kit works as expected. These kits are used when you are interested in 3' UTRs.
 
-![QC-gene-coverage](image-15.png)
+![QC-gene-coverage](./figures/rseqc_compare_coverage.png)
 *This figure was taken from `RSeQC` website, and compares samples with uniform gene coverage and those with 3' bias.*
 
-![QC-gene-coverage-2](image-16.png)
+![QC-gene-coverage-2](./figures/rseqc_my_coverage.png)
 *This is another example from my `RSeQC` results. Note that `gene_coverage.py` is known to be very slow and memory-intensive, so you may want to downsample your data (see before), or restrict the annotation to contain only house keeping genes before running this command.*
 
 ---
@@ -486,7 +486,7 @@ Since GC content is an inherent feature of gene, and DGE analysis compares the s
   - In these situations, tools like `Salmon` applies GC normalisation for more accurate counting. `alpine` can also perform GC bias correction at the fragment level.
   - Gene length normalisation is conceptually similar to GC bias. They impact interpretation of transcripts from different isoforms / genes, since longer transcripts will produce more fragments than shorter ones.
 
-![QC-GC-content](image-18.png)
+![QC-GC-content](./figures/rseqc_GC.png)
 *An example of GC content from my data.*
 
 ### 4.3 Other QC tools: `Picard`, `Preseq`, `dupRadar`
