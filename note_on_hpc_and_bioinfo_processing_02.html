@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Bulk RNA sequencing</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<link href="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.css" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <!-- title: Bulk RNA sequencing -->
+<p><strong>Notes on HPC and bioinformatics</strong></p>
+<p>These are a series of notes that I made after completing my thesis project. I wish to record the packages and some of the scripts that I frequently used throughout the project. Please note that the information may not be 100% correct so please use the code with caution.</p>
+<h1 id="section-2-bulk-rna-sequencing-for-differential-gene-expresison-analysis-part-1">Section 2: Bulk RNA Sequencing for Differential Gene Expresison Analysis (Part 1)</h1>
+<p>In this section, we discuss the overall procedure for bulk RNA-seq analysis for DGE analysis, specifically in pair-end context (single-end scripts are very similar!). Due to my (unexpected) wordiness this section will only cover <strong>Quality control and read trimming</strong> and <strong>Alignment</strong>.</p>
+<p><strong>Table of contents</strong></p>
+<ul>
+<li><a href="#section-2-bulk-rna-sequencing-for-differential-gene-expresison-analysis-part-1">Section 2: Bulk RNA Sequencing for Differential Gene Expresison Analysis (Part 1)</a>
+<ul>
+<li><a href="#1-overview-of-bulk-rna-seq-analysis">1. Overview of bulk RNA-seq analysis</a></li>
+<li><a href="#2-quality-control-and-read-trimming">2. Quality control and read trimming</a>
+<ul>
+<li><a href="#21-studying-fastq-quality-using-fastqc">2.1 Studying fastq quality using <code>fastqc</code></a></li>
+<li><a href="#22-trimming-reads-using-cutadapt">2.2 Trimming reads using <code>cutadapt</code></a></li>
+</ul>
+</li>
+<li><a href="#3-aligning-trimmed-reads-to-reference-genome-with-star">3. Aligning trimmed reads to reference genome with <code>STAR</code></a>
+<ul>
+<li><a href="#31-aligning-reads-using-star">3.1 Aligning reads using <code>STAR</code></a>
+<ul>
+<li><a href="#311-downloading-assembly-and-annotation-files">3.1.1 Downloading assembly and annotation files</a></li>
+<li><a href="#312-generating-star-index">3.1.2 Generating STAR index</a></li>
+<li><a href="#313-aligning-trimmed-reads">3.1.3 Aligning trimmed reads</a></li>
+<li><a href="#314-other-useful-parameters">3.1.4 Other useful parameters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#4-quality-checking-after-alignment">4. Quality-checking after alignment</a>
+<ul>
+<li><a href="#41-qc-on-star-log-files--total-reads-unique-alignment-rate">4.1 QC on <code>STAR</code> log files | total reads, unique alignment rate</a>
+<ul>
+<li><a href="#411-total-reads">4.1.1 Total reads</a></li>
+<li><a href="#412-aligned-and-uniq-aligned-rates">4.1.2 Aligned and Uniq aligned rates</a></li>
+</ul>
+</li>
+<li><a href="#42-qc-using-qualimap--rseqc--strandness-read-distribution-gene-coverage-gc-bias">4.2 QC using <code>qualimap</code> / <code>RSeQC</code> | strandness, read distribution, gene coverage, GC bias</a>
+<ul>
+<li><a href="#421-running-qualimap-and-rseqc">4.2.1 Running <code>qualimap</code> and <code>RSeQC</code></a></li>
+<li><a href="#422-strandness-rseqcinfer_experimentpy">4.2.2 Strandness [<code>RSeQC</code>:<code>infer_experiment.py</code>]</a></li>
+<li><a href="#423-read-distribution-qualimapgenomic-origin-of-reads-rseqcread_distributionpy">4.2.3 Read distribution [<code>qualimap</code>:<em>Genomic origin of reads</em>, <code>RSeQC</code>:<code>read_distribution.py</code>]</a></li>
+<li><a href="#424-gene-coverage-qualimapgene-coverage-profile-rseqcgenebody_coveragepy">4.2.4 Gene coverage [<code>qualimap</code>:<em>Gene coverage profile</em>, <code>RSeQC</code>:<code>geneBody_coverage.py</code>]</a></li>
+<li><a href="#425-gc-bias-rseqcread_gcpy">4.2.5 GC bias [<code>RSeQC</code>:<code>read_GC.py</code>]</a></li>
+</ul>
+</li>
+<li><a href="#43-other-qc-tools-picard-preseq-dupradar">4.3 Other QC tools: <code>Picard</code>, <code>Preseq</code>, <code>dupRadar</code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="1-overview-of-bulk-rna-seq-analysis">1. Overview of bulk RNA-seq analysis</h2>
+<p>The current note is specific for analysis of gene expression. Here is an overview of the analysis, which involves several individual processing steps (relevant file formats are specified in brackets):</p>
+<ol>
+<li><strong>Quality control and read trimming</strong> (input: fastq; output: fastq) For raw sequencing data, read trimming is performed to remove adapters and low quality regions (measured in <em>Phred quality scores</em>) at starts and ends of reads. Quality control is performed before and after trimming to study if the reads have significant quality problems.</li>
+<li><strong>Alignment</strong> (input: fastq; output: sam / bam) Trimmed reads are then aligned to a reference genome using a <em>splice-aware aligner</em> (which recognises introns and exons). Optional but not required, low quality alignments (reads that ambiguously map to several places) can be removed at this step. After alignment, you would like to perform extensive quality control on the aligned reads.</li>
+<li><strong>Feature counting</strong> (input: bam; output: transcript count table) At this step, the number of reads aligned to each <em>&quot;feature&quot;</em> (in our case, genes) will be counted using specific softwares to generate a count table.</li>
+<li><strong>Differential gene expression analysis</strong> (input: count table; metadata specifying experimental design) Differential gene expression analysis are directly performed on <em>raw</em> count table. Gene expression can be subsequently visualised using figures like <em>volcano plots</em> or <em>clustered heatmaps</em>.</li>
+<li><strong>Functional analysis</strong> After DEA, several downstream analyses can be performed to investigate features of the <em>differentially expressed genes</em>. For instance, <em>gene ontology analysis</em> and <em>gene set enrichment analysis</em> help to understand the functional roles of the differentially expressed genes. Additionally, interactions of these genes of interest (so called <em>network analysis</em>) can be studied using tools like <em>WGCNA</em> or <em>STRINGdb</em>.</li>
+</ol>
+<p><img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-6.png" alt="Figure 1">
+<em>Figure 1: Overview of bulk RNAseq processing.</em> QC, quality checking.</p>
+<blockquote>
+<p><strong>A brief note on transcript quanification tools</strong></p>
+<p>Tools like <code>Salmon</code>, <code>kallisto</code>, and <code>RSEM</code> are known as transcript quantification tools. They differ from gene quantification tools, such as <code>subread featureCounts</code>, <code>HTSeq-count</code>, or <code>STAR --quantMode GeneCounts</code>.</p>
+<p>Instead of counting with respect to genomic coordinates, transcript quantification tools can generate expected counts (often not a whole number) for transcripts using algorithms like expectation maximisation, making them more accurate in studying <strong>isoforms</strong> or assigning <strong>multi-mapping reads</strong>. From there, transcript counts can be aggregated to gene-level using R package <code>tximport</code>, making results compatible with DGE analysis.</p>
+<p><code>kallisto</code> and <code>Salmon</code> are pseudoaligners, meaning that they can take in <code>fastq</code> and efficiently perform both alignment with respect to transcripts and feature counting. <code>RSEM</code> and <code>Salmon</code> can accept input <code>bam</code> files created from aligners like <code>STAR</code> against transcriptome and perform quantification from there. Finally, gene-level quantification tools always require <code>bam</code> against genome coordinates as input.</p>
+</blockquote>
+<h2 id="2-quality-control-and-read-trimming">2. Quality control and read trimming</h2>
+<p>For all next-generation sequencing data (including RNA-seq), it is important to perform quality control and read trimming before the alignment to ensure that the sequencing experiments work and high-quality reads are used alignment. Additionally, read trimming is important to avoid <em>adapter contamination</em> (adapters often occurs at tail - i.e., 3' end of the read).</p>
+<h3 id="21-studying-fastq-quality-using-fastqc">2.1 Studying fastq quality using <code>fastqc</code></h3>
+<p><code>fastqc</code> is a command line tool that can be used to generate quality reports for <code>fastq</code> files (<a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/">Documentation</a>). It is very simple to use, just specify the file name:</p>
+<pre><code class="language-bash">fastqc filename.fastq
+</code></pre>
+<p>This command will generate an <code>html</code> report. To aggregate all reports and summarise them into a single file, try <code>multiqc</code>, which is another command line tool (<a href="https://docs.seqera.io/multiqc/reports">Webpage</a>). <code>multiqc</code>'s parser will automatically study the report type and assemble all reports.</p>
+<pre><code class="language-bash"><span class="hljs-comment"># Do this after generating all fastq reports</span>
+<span class="hljs-comment"># Navigate to the directory</span>
+multiqc *.html
+</code></pre>
+<p>In the aggregated report, there are several statistics. Here are a few examples:</p>
+<ol>
+<li>
+<p><strong>Sequence Quality Histogram</strong>: Mean Phred score for each position in the read. Usually, tails will have lower Phred scores, which can be improved via <em>end trimming</em>. Ideally, reads shall have <em>Phred Score above 20 - 25</em> for entire length.
+<img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-2.png" alt="example_1">
+<em>Samples with a dip in quality at 3' end can be rescued using quality trimming.</em></p>
+</li>
+<li>
+<p><strong>Per Base Sequence Content</strong>: The proportion of each base position for which each of the four normal DNA bases has been called. Ideally, the proportion should be consistent across the read (i.e., 4 horizontal lines). It is common that the first few bases at heads have varying proportions (see below for an example). This is caused by the use of <em>randomised hexamers</em> as primers in next-generation sequencing. While the appearance of these fluctuations may cause fastq to generate a lower score in quality checks, they do not mean the library has low quality and shall be safely ignored.
+<img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-3.png" alt="example_2">
+<em>The first 10 bases in this figure can be ignored</em></p>
+</li>
+<li>
+<p><strong>Per Sequence GC content</strong>: The GC content shall be in a <em>bell curve</em>. Two peaks / Binomial distribution likely indicates contaminations, such as from bacterial genome.
+<img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-17.png" alt="example_3">
+<em>This is a figure I took from this <a href="https://www.reddit.com/r/bioinformatics/comments/1imuyho/fastqc_gc_content/">discussion</a>, where the author likely had some unknown contamination.</em></p>
+</li>
+<li>
+<p><strong>Top overrepresented sequences</strong> and <strong>Adapter content</strong>: There sections are useful in determining adapter sequences that shall be removed during read-trimming. Also, look for appearances of repetitive nucleotides (such as poly-Gs) at Top overrepresented sequences sections, as they represent cases where two-colour system sequencers fail to read the sequence and shall also be removed. They often cannot be detected by simple quality-trimming, since sequencers will assign a very high Phred score to these poly-Gs. After trimming the adapters, you may want to do <code>fastqc</code> check again and compare these sections to see if trimming is effective.
+<img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-4.png" alt="example_4"></p>
+</li>
+</ol>
+<p><code>fastqc</code> check shall be used to guide downstream processing. For example, consider the following questions:</p>
+<ul>
+<li>Does read have very low Phred scores? Are there fluctuations in sequence content throughout the read? Are there very high per base N content? -&gt; Perhaps the library has very low quality and the sequencing need to be repeated.</li>
+<li>Is there a noticeable drop in read quality at tails? -&gt; Do quality trimming with tools like <code>trimmomatic</code> or <code>cutadapt</code> to remove these regions. Consider aligners that can perform soft-clipping.</li>
+<li>Is there significant adapter contamination? -&gt; Study which adapter is overrepresented and remove them from the tails.</li>
+</ul>
+<h3 id="22-trimming-reads-using-cutadapt">2.2 Trimming reads using <code>cutadapt</code></h3>
+<p>Here we discuss using <code>cutadapt</code> (<a href="https://cutadapt.readthedocs.io/en/stable/">Documentation</a>) to remove adapters and do quality trimming.</p>
+<p>Apart from <code>cutadapt</code>, there are other useful tools. For example, <code>trimmomatic</code> (<a href="http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf">Manual</a>) can do quality trimming using a <em>sliding window</em>. <code>fastp</code> (<a href="https://open.bioqueue.org/home/knowledge/showKnowledge/sig/fastp">Manual</a>) is a newer tool that combines features from <code>fastqc</code>, <code>trimmomatic</code>, <code>cutadapt</code> and other tools. It guesses and trims adapters, performs quality trimming, and generates reports for reads before and after trimming. You can pick a tool that works best, but <code>cutadapt</code> is certainly a safe choice to begin with.</p>
+<p>Before using <code>cutadapt</code>, it is important to know the adapter sequences that you would like to remove.</p>
+<blockquote>
+<p><strong>How does adapter contamination takes place in Illumina sequencing, and where to find the sequence to trim?</strong><br>
+Note: this section is specific for Illumina sequence-by-synthesis technology. You can read more from their <a href="https://knowledge.illumina.com/software/general/software-general-reference_material-list/000002905">website</a>.</p>
+<p><em>Adapter contamination</em></p>
+<p>Adapter contamination takes place during <strong>readthrough</strong>, i.e. whenever the read being sequenced is longer than the insert and extends into the <strong>index adapter</strong>, leading to unwanted sequences at the <strong>3' end</strong> of the reads. Specifically, the adapter sequences used for trimming (hereafter referred as &quot;adapter sequences&quot;) is a component of the index adapters known as <strong>sequencing primer binding sites</strong> (SP). In Illumina sequencing, adapter contamination <strong>does not occur at the 5' end</strong>, since sequencing start at the beginning of DNA insert, unless the read is a primer-dimer.</p>
+<p>There are two SPs at each end of an insert. In Illumina's pair-end sequencing, while adapter sequence of R1 is always the <strong>same</strong> as SP2, the adapter sequence of R2 needs to be the <strong>reverse complement</strong> of SP1. However, there are cases (including MiSeq and HiSeq 2000/2500) where the forward version of SP1 shall be trimmed for R2 (Read more <a href="https://support-docs.illumina.com/SHARE/AdapterSequences/Content/Overview.htm#Index">here</a>). Therefore, the correct orientation of R2 adapter should always be carefully checked.</p>
+<p><em>Finding adapter sequences</em></p>
+<p>You can usually find adapter sequences at websites of the  library prep kit. If you do not know the kit used for your data, it is often useful to study the <code>fastqc</code> reports, specifically &quot;Adapter content&quot; section, since <code>fastqc</code> will try to guess the kit being used based on overrepresented sequences.</p>
+<p><img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-5.png" alt="Determining adapters for Illumina TruSeq">
+<em>Figure: Removing adapters for TruSeq</em>. All sequences can be found <a href="https://support-docs.illumina.com/SHARE/AdapterSequences/Content/UDIndexes.htm">here</a>.</p>
+</blockquote>
+<p>After finding the adapter sequences, it's time to use <code>cutadapt</code> to remove them. Flags <code>-a</code> and <code>-A</code> specifies the 3' adapter for <code>R1</code> and <code>R2</code>, respectively.</p>
+<p>Here is an example:</p>
+<pre><code class="language-bash"><span class="hljs-comment"># This is a PE example</span>
+cutadapt -a <span class="hljs-string">&quot;<span class="hljs-variable">${R1_3_adapter}</span>&quot;</span> -A <span class="hljs-string">&quot;<span class="hljs-variable">${R2_3_adapter}</span>&quot;</span> \
+--minimum-length=10 -q 20 \
+--cores=16 \
+-o <span class="hljs-variable">${OUTDIR}</span>/<span class="hljs-variable">${testID}</span>_R1_trimmed.fq.gz \
+-p <span class="hljs-variable">${OUTDIR}</span>/<span class="hljs-variable">${testID}</span>_R2_trimmed.fq.gz \
+<span class="hljs-variable">${read1File}</span> <span class="hljs-variable">${read2File}</span>
+</code></pre>
+<p>In this example, quality trimming (removing reads with low Phred scores at ends) is simultaneously performed using <code>-q=20</code> flag. For reads with poly-Gs, using <code>--nextseq-trim=20</code> flag will similarly perform quality trimming at ends but ignores G calls (treating them as low quality).</p>
+<p>Finally, you may want to set a minimum length on all the reads generated from <code>cutadapt</code>. In the above example, we use <code>--minimum-length=10</code> but this can be set to other values. Presenting all trimmed reads to aligner without filtering abnormally short reads (potentially, reads with no length) may lead to errors downstream.</p>
+<h2 id="3-aligning-trimmed-reads-to-reference-genome-with-star">3. Aligning trimmed reads to reference genome with <code>STAR</code></h2>
+<p>Here, we discuss using <code>STAR</code> to perform read alignment. There are other pseudoalignment tools, such as <code>salmon</code> or <code>kallisto</code>, which are very efficient in finding isotypes and assigning reads to transcripts but we won't discuss them for now (since I haven't used them!).</p>
+<h3 id="31-aligning-reads-using-star">3.1 Aligning reads using <code>STAR</code></h3>
+<p>Read alignment using <code>STAR</code> (<a href="https://physiology.med.cornell.edu/faculty/skrabanek/lab/angsd/lecture_notes/STARmanual.pdf">Manual</a>) involves two steps:</p>
+<ol>
+<li><strong><em>Indexing</em> the reference genome</strong> using the genome assembly and annotation information. Index allows the aligner to more efficiently access the genome and find alignments. Index is specific for an aligner and genome. Using a different aligner (e.g. <code>Bowtie</code> or <code>BWA-MEM</code>) or switching the genome assembly (from <code>mm39</code> to <code>mm10</code>) both require constructing a new index.</li>
+<li><strong>Performing <em>alignment</em></strong> using the genome index and trimmed <code>fastq</code> reads. This generates a <code>sam</code>/<code>bam</code> file that can be passed to a feature quantification tool.</li>
+</ol>
+<h4 id="311-downloading-assembly-and-annotation-files">3.1.1 Downloading assembly and annotation files</h4>
+<p>To begin, first download the genome assembly (<code>fasta</code>) and annotation (<code>gtf</code>) files, for example from <a href="https://www.gencodegenes.org/">Gencode</a>, which contains comprehensive annotations for human and mouse (<em>Mus musculus</em>).</p>
+<p><em>Which files shall I download?</em></p>
+<ul>
+<li>Usually you would like to download the most recent release of the annotation file for the genome assembly of interest.</li>
+<li>For genome assembly (<code>fasta</code>), download the <strong>primary assembly (PRI)</strong>. This assembly contains both chromosomes and scaffolds (isolated regions that have not been assigned to chromosomes).
+<ul>
+<li>Using assembly with scaffolds is helpful in correctly assessing the alignment rate and prevent misalignment.</li>
+<li>Assembly containing haplotypes or patches shall not be used.</li>
+</ul>
+</li>
+<li>For annotation file (<code>gtf</code>), download the <strong>comprehensive gene annotation (PRI)</strong>.
+<ul>
+<li>The chromosome names being used in the annotation needs to match the genome assembly.</li>
+<li>I admit, it is confusing to choose between comprehensive and primary annotations.
+<ul>
+<li>Historically, the comprehensive annotation is recommended at Gencode's website, but in latest releases it has shifted to basic annotation (CHR).</li>
+<li><code>STAR</code> documentation and <code>nf-core rnaseq pipeline</code> both recommend using the most comprehensive annotation, which is the main motivation supporting my recommendation (at least this is the case when I was writing this line).</li>
+<li>However, in forum discussions the basic version has been more frequently mentioned for RNAseq so using it is certainly fine. Just clearly state your annotation file in the method section.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="312-generating-star-index">3.1.2 Generating STAR index</h4>
+<p>Here are example scripts for generating STAR index:</p>
+<pre><code class="language-bash">my_cpus=16 <span class="hljs-comment"># Specify resource in #PBS</span>
+
+<span class="hljs-comment"># Suppose we have downloaded the following annotation/gtf:</span>
+my_genome=<span class="hljs-string">&quot;GRCm39.primary_assembly.genome.fa&quot;</span>
+my_annotation=<span class="hljs-string">&quot;gencode.vM37.primary_assembly.annotation.gtf&quot;</span>
+
+<span class="hljs-comment"># Index needs to be stored in an empty directory</span>
+index_dir=<span class="hljs-string">&quot;where/you_want_to_store/STAR/index&quot;</span>
+<span class="hljs-built_in">mkdir</span> <span class="hljs-variable">$index_dir</span>
+
+<span class="hljs-comment"># Generate index</span>
+STAR --runThreadN <span class="hljs-string">&quot;<span class="hljs-variable">$my_cpus</span>&quot;</span> \
+--runMode genomeGenerate \
+--genomeDir <span class="hljs-string">&quot;<span class="hljs-variable">$index_dir</span>&quot;</span> \
+--genomeFastaFiles <span class="hljs-string">&quot;<span class="hljs-variable">$my_genome</span>&quot;</span> \
+--sjdbGTFfile <span class="hljs-string">&quot;<span class="hljs-variable">$my_annotation</span>&quot;</span> \
+--sjdbOverhang 100
+</code></pre>
+<p>The flag, <code>--sjdbOverhang</code> should ideally equal to sequencing readlenthg minus 1. For example, if the sequencing is Illumina 2*100b, then <code>99</code> should be supplied here. In general, using a default <code>100</code> shall work as well as the ideal value (Reference: STAR Manual page 6).</p>
+<h4 id="313-aligning-trimmed-reads">3.1.3 Aligning trimmed reads</h4>
+<p>After generating the index, perform alignment. Here is an example using default options:</p>
+<pre><code class="language-bash"><span class="hljs-comment"># This example aligns PE sequencing input</span>
+my_cpus=16
+index_dir=<span class="hljs-string">&quot;where/you_want_to_store/STAR/index&quot;</span>
+
+<span class="hljs-comment"># Input and output information</span>
+sampleID=<span class="hljs-string">&quot;sample1&quot;</span>
+R1=<span class="hljs-string">&quot;<span class="hljs-variable">${sampleID}</span>_R1_trimmed.fq&quot;</span>
+R2=<span class="hljs-string">&quot;<span class="hljs-variable">${sampleID}</span>_R2_trimmed.fq&quot;</span>
+outdir=<span class="hljs-string">&quot;where/to/place/outputs&quot;</span>; <span class="hljs-built_in">mkdir</span> <span class="hljs-variable">$outdir</span>
+outprefix=<span class="hljs-string">&quot;<span class="hljs-variable">${outdir}</span>/<span class="hljs-variable">${sampleID}</span>_&quot;</span>
+
+<span class="hljs-comment"># Perform alignment</span>
+STAR --genomeDir <span class="hljs-string">&quot;<span class="hljs-variable">$index_dir</span>&quot;</span> \
+--runThreadN <span class="hljs-variable">$my_cpus</span> \
+--readFilesIn <span class="hljs-string">&quot;<span class="hljs-variable">$R1</span>&quot;</span> <span class="hljs-string">&quot;<span class="hljs-variable">$R2</span>&quot;</span> \
+--outFileNamePrefix <span class="hljs-string">&quot;<span class="hljs-variable">$outprefix</span>&quot;</span> \
+--outSAMtype BAM SortedByCoordinate \
+--outSAMattributes Standard \
+--outSAMunmapped Within
+</code></pre>
+<p>Alternatively, here is an example using <code>ENCODE</code> bulk / long RNAseq parameters (also used by many people). In practice both approaches should be fine for quantification.</p>
+<pre><code class="language-bash"><span class="hljs-comment"># Skipping input and output information</span>
+<span class="hljs-comment"># Perform alignment using Encode params</span>
+STAR --genomeDir <span class="hljs-string">&quot;<span class="hljs-variable">$index_dir</span>&quot;</span> \
+--runThreadN <span class="hljs-variable">$my_cpus</span> \
+--readFilesIn <span class="hljs-string">&quot;<span class="hljs-variable">$R1</span>&quot;</span> <span class="hljs-string">&quot;<span class="hljs-variable">$R2</span>&quot;</span> \
+--outFileNamePrefix <span class="hljs-string">&quot;<span class="hljs-variable">$outprefix</span>&quot;</span> \
+--outSAMtype BAM SortedByCoordinate \
+--outSAMattributes NH HI AS NM MD \
+--outFilterType BySJout \
+--outFilterMultimapNmax 20 \
+--alignSJoverhangMin 8 \
+--alignSJDBoverhangMin 1 \
+--outFilterMismatchNmax 999 \
+--outFilterMismatchNoverLmax 0.04 \
+--alignIntronMin 20 --alignIntronMax 1000000 \
+--alignMatesGapMax 1000000 \
+--outSAMunmapped Within 
+</code></pre>
+<p><code>STAR</code> aligner will create multiple output files, each starting with <code>outFileNamePrefix</code>.</p>
+<h4 id="314-other-useful-parameters">3.1.4 Other useful parameters</h4>
+<p>Apart from the <code>gencode</code> parameter set, there could be other variations to the previous command depending on goals of your analysis. There are articles that nicely summarise protocols for specific applications, like this <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4631051/">one</a>.</p>
+<p>Here are two examples of common applications:</p>
+<ul>
+<li>Adding <code>--twopassMode Basic</code> to <strong>study novel splicing events</strong>: This parameter causes <code>STAR</code> to take longer to perform alignment, as reads will now be mapped twice. <code>STAR</code> will learn novel splice junctions from first pass, and use both annotated junctions from <code>gtf</code> and novel junctions from sequencing data to map reads in the second pass. Including this flag can improve sensitivity for RNAseq analysis, and is particularly useful when you are interested in splicing events. Some people argue that including this parameter may be unnecessary for DGE analysis as it does not cause major improvements, so you can also drop it if you would like faster alignment.</li>
+<li>Using ENCODE parameters with additional flags, <code>--quantMode TranscriptomeSAM --sjdbScore 1</code>, for <strong>transcript quantification</strong>: this is the script internally used in <code>RSEM</code> for alignment when specifying <code>--star</code> flag. Using <code>TranscriptomeSAM</code> causes <code>STAR</code> to output alignments with respect to transcript coordinates, making the output <code>bam</code> file compatible with transcript quantification tools like <code>RSEM</code> or <code>Salmon</code>.</li>
+</ul>
+<pre><code class="language-bash"><span class="hljs-comment"># Script used by STAR/RSEM pipeline</span>
+<span class="hljs-comment"># For ease of viewing, I create new lines</span>
+STAR --genomeDir <span class="hljs-string">&quot;<span class="hljs-variable">$index_dir</span>&quot;</span> \
+--outSAMunmapped Within \
+--outFilterType BySJout \
+--outSAMattributes NH HI AS NM MD \
+--outFilterMultimapNmax 20 \
+--outFilterMismatchNmax 999 \
+--outFilterMismatchNoverLmax 0.04 \
+--alignIntronMin 20 \
+--alignIntronMax 1000000 \
+--alignMatesGapMax 1000000 \
+--alignSJoverhangMin 8 --alignSJDBoverhangMin 1 \
+--sjdbScore 1 \
+--runThreadN <span class="hljs-variable">$my_cpus</span> \
+--genomeLoad NoSharedMemory \
+--outSAMtype BAM Unsorted \
+--quantMode TranscriptomeSAM \
+--outSAMheaderHD \@HD VN:1.4 SO:unsorted \
+--outFileNamePrefix <span class="hljs-string">&quot;<span class="hljs-variable">$outprefix</span>&quot;</span> \
+--readFilesIn <span class="hljs-string">&quot;<span class="hljs-variable">$R1</span>&quot;</span> <span class="hljs-string">&quot;<span class="hljs-variable">$R2</span>&quot;</span>
+</code></pre>
+<p>... for transcript quantification tools like <code>Salmon</code>, additional parameter <code>--quantTranscriptomeBan Singleend</code> can be used to enable soft-clipping, insertions, or deletions (referencing pipeline from <a href="https://github.com/CebolaLab/RNA-seq?tab=readme-ov-file#align-to-the-reference-genome">Cebola lab</a>). Please note that <code>bam</code> generated with this additional parameter will be incompatible with <code>RSEM</code>.</p>
+<pre><code class="language-bash"><span class="hljs-comment"># Example of script for Salmon quanitification</span>
+STAR --runThreadN <span class="hljs-variable">$my_cpus</span> --genomeDir <span class="hljs-string">&quot;<span class="hljs-variable">$index_dir</span>&quot;</span> --readFilesIn <span class="hljs-string">&quot;<span class="hljs-variable">$R1</span>&quot;</span> <span class="hljs-string">&quot;<span class="hljs-variable">$R2</span>&quot;</span> --outFileNamePrefix <span class="hljs-string">&quot;<span class="hljs-variable">$outprefix</span>&quot;</span> --readFilesCommand zcat --outSAMtype BAM Unsorted --quantTranscriptomeBan Singleend --outFilterType BySJout --alignSJoverhangMin 8 --outFilterMultimapNmax 20 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverReadLmax 0.04 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000  --quantMode TranscriptomeSAM --outSAMattributes NH HI AS NM MD
+</code></pre>
+<h2 id="4-quality-checking-after-alignment">4. Quality-checking after alignment</h2>
+<p>Multiple quality-checking can be performed after alignment to ensure that the data is good and can be safely passed to the next step, feature quantification.</p>
+<p>Here, I will discuss several metrics to assess when performing quality-checking on the aligned reads. For all of the QC reports, they can be summarised using <code>multiqc</code>.</p>
+<h3 id="41-qc-on-star-log-files--total-reads-unique-alignment-rate">4.1 QC on <code>STAR</code> log files | total reads, unique alignment rate</h3>
+<p>Alignment using <code>STAR</code> will generate several log files. Specifically, <code>Log.final.out</code> summarises the mapping statistics. Aggregating <code>Log.final.out</code> will generate two sections in <code>multiqc</code>. Firstly, there will be a table summarising all QC statistics:</p>
+<p><img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-7.png" alt="STAR-QC-1"></p>
+<p>Alignment and unique alignment rates are also plotted as bar plots.</p>
+<p><img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-8.png" alt="STAR-QC-2"></p>
+<p>From these results, the QC statistics that we would want to particularly focus on are <strong>Total reads</strong>, <strong>Aligned</strong>, and <strong>Uniq aligned</strong>.</p>
+<h4 id="411-total-reads">4.1.1 Total reads</h4>
+<p>Read depth is a key feature of any sequencing data that limits analysis results. Higher read depth will allow DGE analysis to detect more differentially expressed genes, especially those with low expression.</p>
+<p><strong>Interpretation</strong></p>
+<ul>
+<li><em>Expectations for good quality data</em> There are varying standards for the minimal number of aligned reads, but in general, each sample should have at least 10 - 15 million reads. According to <a href="https://www.encodeproject.org/data-standards/rna-seq/long-rnas/">ENCODE Bulk RNAseq criteria</a>, each sample needs to have above 30 million aligned reads, which is more difficult to achieve.</li>
+<li><em>Shall I have as many reads as possible? Not really.</em> As stated in this <a href="https://hbctraining.github.io/DGE_workshop_salmon/lessons/01_DGE_setup_and_overview.html">workshop</a>, increasing read depth is less cost-effective in identifying DEGs than adding more replicates.</li>
+</ul>
+<p><img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-9.png" alt="alt text">
+<em>Increasing the replicates is preferred over deepening the number of reads. As long as read depth is acceptable, it is better to increase reps to detect more DE genes.</em></p>
+<h4 id="412-aligned-and-uniq-aligned-rates">4.1.2 Aligned and Uniq aligned rates</h4>
+<p>When performing alignment on a well-annotated genome, high quality, properly trimmed reads should have high alignment and unique alignment rates. Low alignment rates are indicative of problematic library or contamination from other organisms.</p>
+<p><strong>Interpretation</strong></p>
+<ul>
+<li><em>Expectations for good quality data</em> Both rates shall be high as possible. Good quality reads should have at least <strong>75%</strong> ~ 80% uniquely mapped reads (<a href="https://hbctraining.github.io/Intro-to-rnaseq-hpc-O2/lessons/04_alignment_quality.html#:~:text=As%20an%20example%2C%20a%20good,actual%20sequence%20sample%20is%20good.">Ref</a>), ideally higher than 90% (<a href="https://www.lexogen.com/blog/rna-lexicon-data-analysis-and-quality-control-tertiary-analysis/">Ref</a>).</li>
+<li><em>Low quality data</em> The quality of library need to be assessed when unique alignment rate is lower than 70%.</li>
+</ul>
+<h3 id="42-qc-using-qualimap--rseqc--strandness-read-distribution-gene-coverage-gc-bias">4.2 QC using <code>qualimap</code> / <code>RSeQC</code> | strandness, read distribution, gene coverage, GC bias</h3>
+<p>Both <code>qualimap</code> and <code>RSeQC</code> are command-line tools that can generate detailed QC reports on <code>bam</code> reads. Since there are some overlaps in functionality between the two tools, here we discuss and compare reports from both of them, mainly for four metrics: <strong>strandness</strong>, <strong>read distribution</strong>, <strong>5'-3' bias</strong>, and <strong>GC bias</strong>.</p>
+<hr>
+<h4 id="421-running-qualimap-and-rseqc">4.2.1 Running <code>qualimap</code> and <code>RSeQC</code></h4>
+<p><em>Making reports for <code>qualimap</code></em></p>
+<p>Running <code>qualimap</code> (see <a href="http://qualimap.conesalab.org/doc_html/command_line.html#rna-seq-qc">manual</a> and <a href="http://qualimap.conesalab.org/doc_html/analysis.html#rnaseqqc">expected output</a>) in <code>RNAseq</code> mode requires aligned <code>bam</code> files and <code>gtf</code> annotation file. For example:</p>
+<pre><code class="language-bash"><span class="hljs-comment"># For PE experiment</span>
+qualimap rnaseq \
+-outdir <span class="hljs-variable">${OUTDIR}</span>/<span class="hljs-variable">${testID}</span> \
+-bam <span class="hljs-variable">${bampath}</span> \
+-gtf  <span class="hljs-variable">${GTFpath}</span> \
+--paired \
+--sequencing-protocol strand-specific-reverse \
+--java-mem-size=30G
+</code></pre>
+<p>This will generate reports for PE reverse-stranded RNAseq experiment. Additionally, there is a <code>multi-bamqc</code> mode, which is useful for finding relationships between multiple <code>bam</code> files.</p>
+<p><em>Making reports for <code>RSeQC</code></em></p>
+<p>Slightly different from <code>qualimap</code>, <code>RSeQC</code> (<a href="https://rseqc.sourceforge.net/">website</a>) does not have a single command that automatically generate all QC metrics. Each metric has its own function.</p>
+<p>Before generating reports ...</p>
+<ol>
+<li>You may want to convert <code>gtf</code> to <code>bed12</code>, which is the only annotation format recognisable by <code>RSeQC</code>, as follows. Note, <code>bedops gtf2bed</code> does not work for <code>bed12</code> files.</li>
+</ol>
+<pre><code class="language-bash"><span class="hljs-comment"># GTF to BED12 conversion using UCSC tools</span>
+myGTF=<span class="hljs-string">&quot;<span class="hljs-variable">${NAME}</span>.gtf&quot;</span>
+
+gtfToGenePred <span class="hljs-variable">${myGTF}</span> <span class="hljs-variable">${NAME}</span>.genePred
+genePredToBed <span class="hljs-variable">${NAME}</span>.genePred <span class="hljs-variable">${NAME}</span>.bed12
+
+<span class="hljs-comment"># Sort using genomic coordiates</span>
+<span class="hljs-built_in">sort</span> -k1,1 -k2,2n <span class="hljs-variable">${NAME}</span>.bed12 &gt; <span class="hljs-variable">${NAME}</span>.coord_sorted.bed12 
+</code></pre>
+<ol start="2">
+<li><code>RSeQC</code> is particularly slow on running <code>geneBody_coverage.py</code> command. In this situation, it is recommended to downsample <code>bam</code> reads before generating reports, which does not impact QC results (As previously implemented in nf-core <a href="https://github.com/nf-core/rnaseq/issues/36">pipeline</a>). <a href="https://bioinformatics.stackexchange.com/questions/402/how-can-i-downsample-a-bam-file-while-keeping-both-reads-in-pairs">Method</a> for downsampling is taken from discussion.</li>
+</ol>
+<pre><code class="language-bash"><span class="hljs-comment"># Downsample bam to selected size</span>
+<span class="hljs-comment"># Samtools only works with fraction</span>
+
+inBAM=<span class="hljs-string">&quot;<span class="hljs-variable">${testID}</span>_Aligned.sortedByCoord.out.bam&quot;</span>
+downBAM=<span class="hljs-string">&quot;<span class="hljs-variable">${testID}</span>_1Mdownsample.bam&quot;</span>
+
+READS=<span class="hljs-string">&quot;1000000&quot;</span> <span class="hljs-comment"># Output depth</span>
+fraction=$(samtools idxstats <span class="hljs-string">&quot;<span class="hljs-variable">$inBAM</span>&quot;</span> | <span class="hljs-built_in">cut</span> -f3 | awk -v ct=<span class="hljs-variable">$READS</span> <span class="hljs-string">&#x27;BEGIN {total=0} {total += $1} END {print ct/total}&#x27;</span>) <span class="hljs-comment"># Divided by original depth</span>
+samtools view -b -s <span class="hljs-string">&quot;<span class="hljs-variable">$fraction</span>&quot;</span> <span class="hljs-string">&quot;<span class="hljs-variable">$inBAM</span>&quot;</span> &gt; <span class="hljs-string">&quot;<span class="hljs-variable">$downBAM</span>&quot;</span>
+</code></pre>
+<p>After preparing input files, generate reports for metrics.</p>
+<pre><code class="language-bash"><span class="hljs-comment"># Required: prepare BED12 annotation</span>
+<span class="hljs-comment"># Optional: downsample BAM for geneBody_coverage</span>
+
+infer_experiment.py -r <span class="hljs-variable">${BED12}</span> -i <span class="hljs-variable">${BAMFILE}</span> &gt; <span class="hljs-variable">${OUTDIR}</span>/<span class="hljs-variable">${testID}</span>.infer_experiment.txt
+geneBody_coverage.py -r <span class="hljs-variable">${BED12}</span> -i <span class="hljs-variable">${BAM1M}</span> -o <span class="hljs-variable">${OUTDIR}</span>/<span class="hljs-variable">${testID}</span>
+read_distribution.py -r <span class="hljs-variable">${BED12}</span> -i <span class="hljs-variable">${BAMFILE}</span> &gt; <span class="hljs-variable">${OUTDIR}</span>/<span class="hljs-variable">${testID}</span>.read_distribution.txt
+read_GC.py -i <span class="hljs-variable">${BAMFILE}</span> -o <span class="hljs-variable">${OUTDIR}</span>/<span class="hljs-variable">${testID}</span>
+
+<span class="hljs-comment"># Tin scores (very time consuming, not working for me)</span>
+<span class="hljs-comment"># tin.py -i ${BAMFILE} -r ${BED12} &gt; ${OUTDIR}/${testID}.summary.txt</span>
+</code></pre>
+<hr>
+<p>Now moving to the reports! I will make it clear on where you can use to find these figures.</p>
+<h4 id="422-strandness-rseqcinfer_experimentpy">4.2.2 Strandness [<code>RSeQC</code>:<code>infer_experiment.py</code>]</h4>
+<p>Strandness is a <em>highly crucial feature</em> of an RNA-seq library and impacts how a feature counter shall be assigned aligned reads to genes or transcripts. Providing incorrect strandness will lead to inaccurate expression quantification that negatively impact analysis reliability.</p>
+<p>There are three possible strandness: <strong>unstranded</strong> (default for most analysis softwares), <strong>forward</strong>, and <strong>reverse</strong>.</p>
+<p>It is recommended to check your library's strandness using tools like <code>RSeQC</code>, for several reasons:</p>
+<ul>
+<li>Firstly, you may not always know the kit used for your data.</li>
+<li>Additionally, in cases where you know the strandness information, the consistency between actual and software-predicted strandness is an important metric indicating that library preparation is successful. For example, you would expect the majority of reads coming from and being mapped to the same strand if the library is <em>forward</em>.</li>
+</ul>
+<p>In raw <code>infer_experiment.py</code> report, <code>RSeQC</code> is comparing the strand of read and the gene it maps to. Reads with opposite signs (<code>+-</code>, <code>-+</code>) come from antisense strand, and reads with same signs (<code>++</code>, <code>--</code>) come from sense strand.</p>
+<ul>
+<li>For pair-end, <em>forward</em> is <code>1++,1--,2+-,2-+</code>. <em>Reverse</em> is <code>1+-,1-+,2++,2-- </code></li>
+<li>For single-end, <em>forward</em> is <code>++, --</code>. <em>Reverse</em> is <code>+-, -+</code></li>
+</ul>
+<p>These symbols are then translated to &quot;sense&quot; or &quot;antisense&quot; labels (with respected to R1) in <code>multiqc</code> aggregated report.</p>
+<p><strong>Interpretation</strong></p>
+<ul>
+<li><em>Expectations for good quality data</em> Ideally, for unstranded experiment, proportion of sense and antisense reads should be the same (i.e. between 40-60 for each). For stranded experiment, proportion of reads from same strand should be higher than <strong>80-90%</strong>.</li>
+<li><em>Low quality sample</em> The sample has low quality when the kit strandness is inconsistent with predicted strandness. For example, antisense read proportion below 60% for an antisense experiment likely indicate <strong>contamination</strong> and should be carefully inspected.</li>
+</ul>
+<p><img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-11.png" alt="QC-strandness-antisense">
+<em>Example of a stranded experiment - Can you tell its strandness?</em></p>
+<p><img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-14.png" alt="QC-strandness2-unstranded">
+<em>How can you tell that the data is unstranded?</em> (<a href="https://training.galaxyproject.org/training-material/topics/transcriptomics/tutorials/rna-seq-reads-to-counts/tutorial.html">Ref</a>)</p>
+<blockquote>
+<p><strong>More on stranded libraries: what are them, and why is it important to know them?</strong></p>
+<p><em>What are stranded libraries?</em></p>
+<p>In many cases, the RNA-sequencing library will be <strong>stranded</strong> (also known as directional or strand-specific). For single-end sequencing, all reads will be exclusively derived from sense <strong>or</strong> antisense strands. In paired-end sequencing, there will be a <strong>fixed relationship</strong> between strandness and read pair, for example R1 always representing the sense strand. Such specificity ensures that reads can be accurately assigned to features, particularly when assigning reads to overlapping genes.</p>
+<p>As a quick recap, sense strand (coding strand) contains the same sequence as mRNA except that T becomes U. Antisense strand (non-coding, template strand) is read by RNA polymerase to generate mRNA and is the reverse-complement of mRNA.</p>
+<p><em>Generating stranded libraries using the dUTP method</em></p>
+<p>One common method used to generate stranded libraries is the dUTP method, where <strong>R1 keeps information from the antisense strand</strong>. In this method, strand selection is performed during cDNA synthesis. The first strand cDNA (antisense) is synthesised using mRNA as template. Then, the second strand is synthesised using <strong>dUTP</strong> instead of dTTP. This double strand structure enables efficient ligation to Y-adapters, and fragment at second strand can be subsequently removed using <strong>UDG</strong> [uracil DNA glycosylase] enzyme following ligation. Since the Y-adapters are <em>asymmetric</em> (i.e. the adapter sequence being ligated at 5' and 3' ends are different), the strandness information is preserved throughout subsequent PCR amplification and sequencing.</p>
+<p>The method is visualised in this nice <a href="https://www.youtube.com/watch?v=OoBITqzcy1Y">video</a> and the figure below.
+<img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-10.png" alt="alt text"></p>
+<p><em>Providing strandness for feature counters</em></p>
+<p>Many feature counters will require such information as input to more correctly assign reads to features. It is critical to provide the correct information. Here is a summary of parameters for common aligner / counters (<a href="https://chipster.csc.fi/manual/library-type-summary.html">Ref</a>). <strong>Always change strandness to make it consistent with your data!</strong></p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>unstranded</th>
+<th>R1 == sense</th>
+<th>R1 == antisense</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TopHat/Cufflinks</td>
+<td><code>library-type fr-unstranded</code></td>
+<td><code>library-type fr-secondstrand</code></td>
+<td><code>library-type fr-firststrand</code></td>
+</tr>
+<tr>
+<td>HISAT2</td>
+<td><em>default</em></td>
+<td><code>--rna-strandedness F (SE), FR (PE)</code></td>
+<td><code>--rna-strandedness R (SE), RF (PE)</code></td>
+</tr>
+<tr>
+<td>HTSeq</td>
+<td><code>stranded --no</code></td>
+<td><code>stranded --yes</code></td>
+<td><code>stranded --reverse</code></td>
+</tr>
+<tr>
+<td>featureCounts</td>
+<td><code>-s 0</code>; <em>default</em></td>
+<td><code>-s 1</code></td>
+<td><code>-s 2</code></td>
+</tr>
+<tr>
+<td>RSEM</td>
+<td><code>--strandness none</code>; <em>default</em></td>
+<td><code>--strandness forward</code></td>
+<td><code>--strandness reverse</code></td>
+</tr>
+<tr>
+<td>Salmon</td>
+<td><code>-l IU</code></td>
+<td><code>-l ISF</code></td>
+<td><code>-l ISR</code></td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+<hr>
+<h4 id="423-read-distribution-qualimapgenomic-origin-of-reads-rseqcread_distributionpy">4.2.3 Read distribution [<code>qualimap</code>:<em>Genomic origin of reads</em>, <code>RSeQC</code>:<code>read_distribution.py</code>]</h4>
+<p>The Read distribution section displays the percentage of genomic feature assigned for aligned reads.</p>
+<p><strong>Interpretation</strong></p>
+<ul>
+<li><em>Expectations for good quality data</em> For DGE analysis (enriched in mRNA), you shall expect the majority of reads (above <strong>70%</strong>) corresponding to exon-associated features (for <code>RSeQC</code>, this would be the sum of CDX_Exons and Exons at 5' and 3' UTR).</li>
+<li><em>Shall I always expect low percentage of intronic reads?</em> Similar to strandness, reads will have different distribution patterns if a different library preparation method is used. For example, in <em>total RNA-seq</em> there will be more intronic RNAs.</li>
+</ul>
+<p><img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-12.png" alt="QC-read-distribution">
+<em>While both tools are able t produce this section, <code>RSeQC</code> uses a more detailed feature category than <code>qualimap</code>.</em></p>
+<hr>
+<h4 id="424-gene-coverage-qualimapgene-coverage-profile-rseqcgenebody_coveragepy">4.2.4 Gene coverage [<code>qualimap</code>:<em>Gene coverage profile</em>, <code>RSeQC</code>:<code>geneBody_coverage.py</code>]</h4>
+<p>Gene coverage profiles show the integrity of RNA during seqeuncing.</p>
+<p><strong>Interpretation</strong></p>
+<ul>
+<li><em>Expectations for good quality data</em> The gene coverage is expected to be <strong>consistent</strong> throughout the gene body, and there shall be <strong>no noticeable bias at 5' or 3' ends</strong>. It is common to have dips at start (5') and end (3') on the X axis. Bias towards 3' end may suggest<a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0091851"> degradation of RNA</a> at 5' ends, which is indicative of low quality.</li>
+<li><em>Exceptions to this rule</em> For data coming from 3' assay (such as <a href="https://www.lexogen.com/quantseq-family/">QuantSeq</a>), peaks at 3' tail are actually expected and indicates that the kit works as expected. These kits are used when you are interested in 3' UTRs.</li>
+</ul>
+<p><img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-15.png" alt="QC-gene-coverage">
+<em>This figure was taken from <code>RSeQC</code> website, and compares samples with uniform gene coverage and those with 3' bias.</em></p>
+<p><img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-16.png" alt="QC-gene-coverage-2">
+<em>This is another example from my <code>RSeQC</code> results. Note that <code>gene_coverage.py</code> is known to be very slow and memory-intensive, so you may want to downsample your data (see before), or restrict the annotation to contain only house keeping genes before running this command.</em></p>
+<hr>
+<h4 id="425-gc-bias-rseqcread_gcpy">4.2.5 GC bias [<code>RSeQC</code>:<code>read_GC.py</code>]</h4>
+<p>PCR is often the main source of GC bias. Since PCR amplification is an exponential process, the resulting difference may be very significant. There is a discussion in this <a href="https://mikelove.wordpress.com/2016/09/26/rna-seq-fragment-sequence-bias/">blog</a>.</p>
+<p>GC bias may arise from two sources:</p>
+<ul>
+<li><em>Biological, fragment-level</em>: This relates to the GC% of the fragment being sequenced and of the underlying gene. cDNA derived from regions with extremely low or high GC% (&lt;35% or &gt;65%) will be less preferentially sequenced.</li>
+<li><em>Technical, sample-level</em>: Technical bias are sample-specific and impact the expression of all genes in the library. For example, differences in temperature in PCR thermal cyclers may cause data prepared in different batches to have different GC bias.</li>
+</ul>
+<p>Since GC content is an inherent feature of gene, and DGE analysis compares the same gene across sample, we would expect bias from this source to have minimal effect on analysis. Therefore, we are mainly concerned with sample-level GC bias. GC bias can be studied in <code>fastqc</code> for raw reads, or for aliged reads using <code>read_GC.py</code>.</p>
+<p><strong>Interpretation</strong></p>
+<ul>
+<li><em>Expectations for good quality data</em> In general, all sample shall have bell-shape GC curve (same as <code>fastqc</code> interpretation). Furthermore, the trend should be consistent across samples, where no sample having shift in GC content.</li>
+<li><em>Correcting sample-level GC bias</em> Sample-level GC bias is common when data for analysis come from different <em>batches</em>, and does not mean that data have <em>bad quality</em>.
+<ul>
+<li>Packages such as <code>EDASeq</code> or <code>cqn</code> estimate correction factors for sample-specific effects that can be used for DGE analysis tools like <code>edgeR</code>.</li>
+</ul>
+</li>
+<li><em>When will fragment-level effect matter?</em>
+<ul>
+<li>While being less relevant in DGE's context, fragment-specific GC effect matters when comparing expression between genes in the same sample, or when comparing expression between isoforms of the same gene.</li>
+<li>In these situations, tools like <code>Salmon</code> applies GC normalisation for more accurate counting. <code>alpine</code> can also perform GC bias correction at the fragment level.</li>
+<li>Gene length normalisation is conceptually similar to GC bias. They impact interpretation of transcripts from different isoforms / genes, since longer transcripts will produce more fragments than shorter ones.</li>
+</ul>
+</li>
+</ul>
+<p><img src="file:///c:\Users\26308\OneDrive\Desktop\phD application\image-18.png" alt="QC-GC-content">
+<em>An example of GC content from my data.</em></p>
+<h3 id="43-other-qc-tools-picard-preseq-dupradar">4.3 Other QC tools: <code>Picard</code>, <code>Preseq</code>, <code>dupRadar</code></h3>
+<p>Apart from the discussed reports, there are other tools that can be used when performing quality checking. Many training websites nicely summarise these QC tools and how to interpret the results (<a href="https://github.com/Zymo-Research/service-pipeline-documentation/blob/master/docs/how_to_use_RNAseq_report.md">Zymo Research</a>, <a href="https://training.galaxyproject.org/training-material/topics/transcriptomics/tutorials/rna-seq-reads-to-counts/tutorial.html">Galaxy</a>, <a href="https://hbctraining.github.io/Intro-to-rnaseq-hpc-salmon/lessons/03_QC_STAR_and_Qualimap_run.html">hbctraining</a>, <a href="https://www.lexogen.com/blog/category/rna-expertise-hub/">lexogen</a>), which I have frequently referenced when phrasing my discussion.</p>
+<p>For example:</p>
+<ul>
+<li><code>Picard MarkDuplicates</code> studes the percentage of duplicated reads in each sample. For DGE analysis, it is <strong>not recommended to remove duplicates</strong>.</li>
+<li><code>Preseq</code> studies the library complexity, i.e. how many unique reads / additional information can be generated when increasing read depth. However, note that it is preferred to add more replicates than increase read depth to detect more DEGs.</li>
+<li><code>dupRadar</code> also studies duplication rate, but against gene expression level. In a good quality library, highly expressed genes are expected to have higher duplication rate than lowly expressed genes.</li>
+</ul>
+<p>Additionally, depending on your goal, <code>RSeQC</code> can generate other metrics, such as <code>junction_saturation.py</code> to see if read depth is sufficient for alternative splicing analysis.</p>
+<p>Overall, the key of quality checking is to always perform and interpret QC results with respect to your library kit and experiment aim. <strong>There is no absolute universal thresholds of QC metrics, and you should always adjust your expectation depending on your exact situation.</strong></p>
+<p><em>That's it!</em></p>
+
+            <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
+            
+        </body>
+        </html>
